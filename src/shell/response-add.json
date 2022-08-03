@@ -1,0 +1,12 @@
+{"filename":"/tmp/IRIS.pdf","sc":"0 \u0000å\u0001\u0001\u0004\u0004Š\u0013>\u0001<PROPERTY DOES NOT EXIST>zadd+17^data.test.1 *Data,data.test\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0000˜\u0001\u0001\u0001\t\u0001IRISAPP\u0000Š\u0001\u0001\u0018\u0001^zadd+17^data.test.1^1\u001a\u0001e^zadd+7^common.REST.1^1%\u0001e^zDispatchRequest+42^%CSP.REST.1^1\u001a\u0001e^zPage+26^%CSP.REST.1^1$\u0001e^CSPDispatch+484^%SYS.cspServer^2$\u0001d^CSPDispatch+274^%SYS.cspServer^1&\u0001d^zProcessRequest+1^%CSP.Session.1^1!\u0001d^Request+673^%SYS.cspServer2^1 \u0001d^Request+25^%SYS.cspServer2^1&\u0001d^zProcessRequest+1^%CSP.Request.1^1\u001c\u0001d^css+51^%SYS.cspServer2^1 \u0001d^SuperServer+56^%SYS.SERVER^3\u0007\u0001d^^^0","elapse":0.143044}{
+	"errors":[ {
+			"code":5002,
+			"domain":"%ObjectErrors",
+			"error":"ERROR #5002: ObjectScript error: <PROPERTY DOES NOT EXIST>zadd+17^data.test.1 *Data,data.test",
+			"id":"ObjectScriptError",
+			"params":["<PROPERTY DOES NOT EXIST>zadd+17^data.test.1 *Data,data.test"
+			]
+		}
+	],
+	"summary":"ERROR #5002: ObjectScript error: <PROPERTY DOES NOT EXIST>zadd+17^data.test.1 *Data,data.test"
+}
