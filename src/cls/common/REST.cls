@@ -305,12 +305,18 @@ ClassMethod import() As %Status
         for i = 1 : 1 : class.Properties.Count() {
             set propertyName = class.Properties.GetAt(i).Name
             if class.Properties.GetAt(i).Type [ "%Stream." {
-                set stream = x.%Get(propertyName,,"stream")
-                do $METHOD($PROPERTY(a,propertyName),"CopyFrom",stream)
-                 
+                #; set stream = x.%Get(propertyName,,"stream")
+                do $METHOD($PROPERTY(a,propertyName),"CopyFrom",x.%Get(propertyName,,"stream"))
             } else {
                 set $PROPERTY(a,propertyName) = x.%Get(propertyName)
             }  
+        }
+        set (a.Integer,a.Float,a.Double,a.Numeric) = a.BStream.Size
+        set a.Timestamp = $zdt($h,3)
+        set a.Date = +$H
+        set a.Boolean = 1
+        if a.CStream.Size = 0 {
+            do a.CStream.CopyFrom(a.BStream)
         }
         set saveOK=a.%Save() 
     }
@@ -478,13 +484,12 @@ ClassMethod stream(classname As %String, id As %Integer, property As %String) As
         
         set data=$CLASSMETHOD(classname,"%OpenId",id)
         set stream = $PROPERTY(data,property)
+        set %response.ContentType="application/octet-stream"
         if data.extension = "pdf" {
             set %response.ContentType="application/pdf"
         } 
         if data.extension = "gif" {
             set %response.ContentType="image/gif"
-        } else {
-            set %response.ContentType="application/octet-stream"
         }
 
         set sc = $METHOD(stream,"OutputToDevice")
