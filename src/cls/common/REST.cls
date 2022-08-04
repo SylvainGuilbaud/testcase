@@ -496,13 +496,7 @@ ClassMethod stream(classname As %String, id As %Integer, property As %String) As
     } else {
         set sc=$SYSTEM.Status.Error(5001,id_" doesn't exist")
     }
-    #; set data = ##class(Exparf.ACHATSMATP1).%OpenId(51398)
     s %response.Status=200
-    
-    #; write data.PJCoa.Size,!,!
-    #; while 'data.PJCoa.AtEnd {
-    #;      write data.PJCoa.Read()
-    #; }
     return sc
 }
 
