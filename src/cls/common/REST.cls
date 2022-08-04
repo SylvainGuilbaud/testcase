@@ -199,7 +199,6 @@ ClassMethod import() As %Status
     set DataLocation = class.Storages.GetAt(1).DataLocation
     set IndexLocation = class.Storages.GetAt(1).IndexLocation
     set StreamLocation = class.Storages.GetAt(1).StreamLocation
-    //set class.Super = "Exparf.common"
     set json.IdLocation=(IdLocation)
     if (json.init) { // si init = true
          kill @DataLocation,@IndexLocation,@StreamLocation  // suppression des données/index/streams de la classe dans IRIS
@@ -211,7 +210,7 @@ ClassMethod import() As %Status
     set json.records=[]
 
     while array.%GetNext(.key,.value) { 
-        set tmp = ##class(%Stream.GlobalBinary).%New()
+        set tmp = ##class(%Stream.GlobalCharacter).%New()
         do value.%ToJSON(tmp)
         do tmp.Rewind()
         set x = {}.%FromJSON(tmp.ReadLineIntoStream())
@@ -220,8 +219,14 @@ ClassMethod import() As %Status
         for i = 1 : 1 : class.Properties.Count() {
             set propertyName = class.Properties.GetAt(i).Name
             if class.Properties.GetAt(i).Type [ "%Stream." {
-                #; set stream = x.%Get(propertyName,,"stream")
                 do $METHOD($PROPERTY(a,propertyName),"CopyFrom",x.%Get(propertyName,,"stream"))
+                do $METHOD($PROPERTY(a,propertyName),"Rewind")
+                set tmp = ##class(%Stream.GlobalCharacter).%New()
+                while $PROPERTY($PROPERTY(a,propertyName),"AtEnd") = 0 {
+                    do tmp.Write($system.Encryption.Base64Decode($METHOD($PROPERTY(a,propertyName),"Read")))
+                }
+                set sc = $METHOD($PROPERTY(a,propertyName),"Clear")
+                set sc = $METHOD($PROPERTY(a,propertyName),"CopyFrom",tmp)
             } else {
                 set $PROPERTY(a,propertyName) = x.%Get(propertyName)
             }  
