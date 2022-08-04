@@ -49,37 +49,7 @@ ClassMethod importJSON() As %Status
     set json.records=[]
 
     while array.%GetNext(.key,.value) { // récupération d'un enregistrement dans la variable "value" 
-        #; set tmp = ##class(%Stream.GlobalBinary).%New()
-        #; do value.%ToJSON(tmp)
-        #; do tmp.Rewind()
-        #; set x = {}.%FromJSON(tmp.ReadLineIntoStream())
-        #; set longObject = {"a":(longStr),"b":(longStr)}
-        #; set file=##class(%File).%New("/tmp/a.txt")
-        #; do file.Open("WSN")
-        #; do value.%ToJSON(file)
-        #; do file.Close()
-        #; do file.Open("RS")
-        #; set newObject = {}.%FromJSON(file)
-        #; write !,"Property newObject.a is "_$LENGTH(newObject.a)_" characters long."
-        set a=$CLASSMETHOD(json.classname,"%New") // instanciation d'un nouvel enregistrement dans IRIS dans la variable "a"
- 		#; set info={}
-        #; set info.value = x.%ToJSON()
-        #; set info.valueSize = $LENGTH(x.BStream)
-        #; set info.BStreamGet = x.%Get("BStream")
-        #; set info.name=(x.String)
-        #; set info.extension=(x.extension)
-        #; set info.size=($LENGTH(x.BStream))
-        #; do json.records.%Push(info)
-
-        #; for i = 1 : 1 : class.Properties.Count() {
-        #;     set propertyName = class.Properties.GetAt(i).Name
-        #;     if class.Properties.GetAt(i).Type [ "%Stream." {
-        #;         do $METHOD($PROPERTY(a,propertyName),"Write",value.%Get(propertyName))
-        #;     } else {
-        #;         set $PROPERTY(a,propertyName) = value.%Get(propertyName)
-        #;     }  
-        #; }
-        
+        set a=$CLASSMETHOD(json.classname,"%New") // instanciation d'un nouvel enregistrement dans IRIS dans la variable "a"    
         set parseOK=a.%JSONImport(value) // import des données contenues dans "value" vers la variable "a" (champ-à-champ)
         if 'parseOK { // si le PARSING de l'import JSON a levé une exception 
             set parseError={},parseErrorID=$i(^admin.migration(json.classname,ts,"parseError")) // initialisation des variables et globales pour le rapport d'erreurs de PARSING
@@ -186,76 +156,21 @@ ClassMethod importTEXT() As %Status
     }
 
     set json.data = data
-
-    #; set array = payload.data.%GetIterator() // initialisation de l'itérateur pour parcourir le tableau d'enregistrements envoyés en JSON
-    #; set json.nbRecords=payload.data.%Size() // récupération du nombre d'enregistrements contenus dans le tableau JSON
-    #; set json.parseError=[],json.saveError=[] // initialisation des tableaux d'erreurs de PARSING ou de SAVE pour le rapport de l'import 
-    #; set json.records=[]
-
-    #; while array.%GetNext(.key,.value) { // récupération d'un enregistrement dans la variable "value" 
-    #;     #; set tmp = ##class(%Stream.GlobalBinary).%New()
-    #;     #; do value.%ToJSON(tmp)
-    #;     #; do tmp.Rewind()
-    #;     #; set x = {}.%FromJSON(tmp.ReadLineIntoStream())
-    #;     #; set longObject = {"a":(longStr),"b":(longStr)}
-    #;     #; set file=##class(%File).%New("/tmp/a.txt")
-    #;     #; do file.Open("WSN")
-    #;     #; do value.%ToJSON(file)
-    #;     #; do file.Close()
-    #;     #; do file.Open("RS")
-    #;     #; set newObject = {}.%FromJSON(file)
-    #;     #; write !,"Property newObject.a is "_$LENGTH(newObject.a)_" characters long."
-    #;     set a=$CLASSMETHOD(json.classname,"%New") // instanciation d'un nouvel enregistrement dans IRIS dans la variable "a"
- 	#; 	#; set info={}
-    #;     #; set info.value = x.%ToJSON()
-    #;     #; set info.valueSize = $LENGTH(x.BStream)
-    #;     #; set info.BStreamGet = x.%Get("BStream")
-    #;     #; set info.name=(x.String)
-    #;     #; set info.extension=(x.extension)
-    #;     #; set info.size=($LENGTH(x.BStream))
-    #;     #; do json.records.%Push(info)
-
-    #;     #; for i = 1 : 1 : class.Properties.Count() {
-    #;     #;     set propertyName = class.Properties.GetAt(i).Name
-    #;     #;     if class.Properties.GetAt(i).Type [ "%Stream." {
-    #;     #;         do $METHOD($PROPERTY(a,propertyName),"Write",value.%Get(propertyName))
-    #;     #;     } else {
-    #;     #;         set $PROPERTY(a,propertyName) = value.%Get(propertyName)
-    #;     #;     }  
-    #;     #; }
-        
-    #;     set parseOK=a.%JSONImport(value) // import des données contenues dans "value" vers la variable "a" (champ-à-champ)
-    #;     if 'parseOK { // si le PARSING de l'import JSON a levé une exception 
-    #;         set parseError={},parseErrorID=$i(^admin.migration(json.classname,ts,"parseError")) // initialisation des variables et globales pour le rapport d'erreurs de PARSING
-    #;         set parseError.key=key+1 // initialisation de la clé du rapport d'erreur à key + 1 (un tableau JSON commençant avec une key = 0)
-    #;         set ^admin.migration(json.classname,ts,"parseError",parseErrorID,"key")=parseError.key // stockage de la key dans la globale du rapport de migration
-    #;         set parseError.error=$system.Status.GetErrorText(parseOK) // récupération du message d'erreur de PARSING
-    #;         set ^admin.migration(json.classname,ts,"parseError",parseErrorID,"error")=parseError.error // stockage du messages d'erreur dans la globale du rapport de migration
-    #;         set parseError.content={} // initilisation du contenu des données reçues
-    #;         set parseError.content.name=$zstrip($piece(parseError.error,",",2),"*W") // récupération du nom de la propriété en erreur
-    #;         set ^admin.migration(json.classname,ts,"parseError",parseErrorID,"name")=parseError.content.name
-    #;         set parseError.content.value=$PROPERTY(value,parseError.content.name) // récupération du contenu envoyé pour cette propriété
-    #;         set ^admin.migration(json.classname,ts,"parseError",parseErrorID,"value")=parseError.content.value
-    #;         set parseError.content.length=$LENGTH(parseError.content.value) // récupération du nombre de caractères envoyés pour cette propriété
-    #;         set ^admin.migration(json.classname,ts,"parseError",parseErrorID,"length")=parseError.content.length
-    #;         #; set parseError.content.fullContent=value
-    #;         do json.parseError.%Push(parseError) // ajout du détail de l'erreur dans le tableau du rapport d'erreurs
-    #;     }
-    #;     set saveOK=a.%Save() // validation + stockage de l'enregistrement dans IRIS
-    #;     if 'saveOK { // si le stockage dans IRIS a levé une exception
-    #;         set saveError={},saveOKID=$i(^admin.migration(json.classname,ts,"saveError")) //initilsation des variables et globales pour le rapport d'erreurs de SAVE
-    #;         set saveError.key=key+1 // initialisation de la clé du rapport d'erreur à key + 1 (un tableau JSON commençant avec une key = 0)
-    #;         set ^admin.migration(json.classname,ts,"saveError",saveOKID,"key")=saveError.key // stockage de la key dans la globale du rapport de migration
-    #;         set saveError.error=$system.Status.GetErrorText(saveOK) // récupération du message d'erreur de SAVE
-    #;         set ^admin.migration(json.classname,ts,"saveError",saveOKID,"key")=saveError.error // stockage du messages d'erreur dans la globale du rapport de migration
-    #;         do json.saveError.%Push(saveError) // ajout du détail de l'erreur dans le tableau du rapport d'erreurs
-    #;     } else {
-    #;         set imported=$INCREMENT(imported) // si le save n'a pas échoué, incrément du nombre d'enregistrements correctement importés dans IRIS pour le rapport
-    #;     }
+    set saveOK=a.%Save() // validation + stockage de l'enregistrement dans IRIS
+    if 'saveOK { // si le stockage dans IRIS a levé une exception
+        set saveError={},saveOKID=$i(^admin.migration(json.classname,ts,"saveError")) //initilsation des variables et globales pour le rapport d'erreurs de SAVE
+        set saveError.key=key+1 // initialisation de la clé du rapport d'erreur à key + 1 (un tableau JSON commençant avec une key = 0)
+        set ^admin.migration(json.classname,ts,"saveError",saveOKID,"key")=saveError.key // stockage de la key dans la globale du rapport de migration
+        set saveError.error=$system.Status.GetErrorText(saveOK) // récupération du message d'erreur de SAVE
+        set ^admin.migration(json.classname,ts,"saveError",saveOKID,"key")=saveError.error // stockage du messages d'erreur dans la globale du rapport de migration
+        do json.saveError.%Push(saveError) // ajout du détail de l'erreur dans le tableau du rapport d'erreurs
+    } else {
+        set imported=$INCREMENT(imported) // si le save n'a pas échoué, incrément du nombre d'enregistrements correctement importés dans IRIS pour le rapport
+    }
     #; }
-    #; set json.imported=imported // récupération dans le rapport du nombre d'enregistrements importés
-    #; set json.elapse=$zh-start // récupération dans le rapport de la durée d'exécution de l'import
-    #; set ^admin.migration(json.classname,ts,"import")="imported:"_imported_" size:"_json.size_" (elapse:"_json.elapse_")" // stockage de la durée d'exécution de l'import dans la globale du rapport de migration
+    set json.imported=imported // récupération dans le rapport du nombre d'enregistrements importés
+    set json.elapse=$zh-start // récupération dans le rapport de la durée d'exécution de l'import
+    set ^admin.migration(json.classname,ts,"import")="imported:"_imported_" size:"_json.size_" (elapse:"_json.elapse_")" // stockage de la durée d'exécution de l'import dans la globale du rapport de migration
     do json.%ToJSON() // export du rapport en JSON pour la réponse
     }
     catch ex {
