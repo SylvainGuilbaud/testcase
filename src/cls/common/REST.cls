@@ -406,7 +406,6 @@ ClassMethod stream(classname As %String, id As %Integer, property As %String) As
         if data.extension = "gif" {
             set %response.ContentType="image/gif"
         }
-
         set sc = $METHOD(stream,"OutputToDevice")
     } else {
         set sc=$SYSTEM.Status.Error(5001,id_" doesn't exist")
