@@ -1,0 +1,12 @@
+{"text":"ERROR #5002: ObjectScript error: <MAXSTRING>zimport+38^common.REST.1"}{
+	"errors":[ {
+			"code":5002,
+			"domain":"%ObjectErrors",
+			"error":"ERROR #5002: ObjectScript error: <MAXSTRING>zimport+38^common.REST.1",
+			"id":"ObjectScriptError",
+			"params":["<MAXSTRING>zimport+38^common.REST.1"
+			]
+		}
+	],
+	"summary":"ERROR #5002: ObjectScript error: <MAXSTRING>zimport+38^common.REST.1"
+}
