@@ -130,14 +130,12 @@ ClassMethod import() As %Status
         for i = 1 : 1 : class.Properties.Count() {
             set propertyName = class.Properties.GetAt(i).Name
             if class.Properties.GetAt(i).Type [ "%Stream." {
-                do $METHOD($PROPERTY(a,propertyName),"CopyFrom",x.%Get(propertyName,,"stream"))
-                do $METHOD($PROPERTY(a,propertyName),"Rewind")
                 set tmp = ##class(%Stream.GlobalCharacter).%New()
-                while $PROPERTY($PROPERTY(a,propertyName),"AtEnd") = 0 {
-                    do tmp.Write($system.Encryption.Base64Decode($METHOD($PROPERTY(a,propertyName),"Read")))
+                do tmp.CopyFrom(x.%Get(propertyName,,"stream"))
+                do tmp.Rewind() 
+                while 'tmp.AtEnd {
+                    do $METHOD($PROPERTY(a,propertyName),"Write",$system.Encryption.Base64Decode(tmp.Read()))
                 }
-                set sc = $METHOD($PROPERTY(a,propertyName),"Clear")
-                set sc = $METHOD($PROPERTY(a,propertyName),"CopyFrom",tmp)
             } else {
                 set $PROPERTY(a,propertyName) = x.%Get(propertyName)
             }  
