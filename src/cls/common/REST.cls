@@ -12,6 +12,7 @@ XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
 <Route Url="/pop/:classname/:nb" Method="GET" Call="pop"/>
 <Route Url="/add" Method="POST" Call="add"/>
 <Route Url="/import" Method="POST" Call="import"/>
+<Route Url="/importjson" Method="POST" Call="importJSON"/>
 <Route Url="/nb/:classname" Method="GET" Call="nb"/>
 <Route Url="/kill/:classname" Method="DELETE" Call="kill"/>
 <Route Url="/list/:classname" Method="GET" Call="list"/>
