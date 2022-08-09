@@ -5,8 +5,8 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: always
-    container_name: iris-demo
-    hostname: $LOGNAME-iris-demo
+    container_name: testcase-json-import
+    hostname: testcase-json-import
     ports:
       - 1972
       - 12773:52773

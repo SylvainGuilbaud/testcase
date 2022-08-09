@@ -17,7 +17,7 @@ XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
 <Route Url="/kill/:classname" Method="DELETE" Call="kill"/>
 <Route Url="/list/:classname" Method="GET" Call="list"/>
 <Route Url="/list/:classname/:min/:max" Method="GET" Call="listTop"/>
-<Route Url="/stream/:classname/:id/:property" Method="GET" Call="stream" />
+<Route Url="/stream/:classname/:property/:id" Method="GET" Call="stream" />
 </Routes>
 }
 
@@ -54,14 +54,15 @@ ClassMethod importJSON() As %Status
                 set parseOK=a.%JSONImport(value)    
                 if 'parseOK { 
                 set parseError={}
-                set parseError.error=$system.Status.GetErrorText(parseOK) 
+                set parseError.error=$system.Status.GetErrorText(parseOK)
+                set parseError.key=(key) 
                 set ^admin.migration(json.classname,"parse error",$zdt($now(),3,,6))=parseError.error 
                 do json.parseError.%Push(parseError) 
             } 
                 set saveOK=a.%Save() 
                 if 'saveOK { 
                     set saveError={}
-                    set saveError.id=(ID)
+                    set saveError.key=(key)
                     set saveError.error=($system.Status.GetErrorText(saveOK)) 
                     set ^admin.migration(json.classname,"save error",ID)=saveError.error 
                     do json.saveError.%Push(saveError) 
@@ -162,7 +163,7 @@ ClassMethod import() As %Status
                 set saveOK=a.%Save() 
                 if 'saveOK { 
                     set saveError={}
-                    set saveError.id=(ID)
+                    set saveError.key=(key)
                     set saveError.error=($system.Status.GetErrorText(saveOK)) 
                     set ^admin.migration(json.classname,"save error",ID)=saveError.error 
                     do json.saveError.%Push(saveError) 
@@ -330,7 +331,7 @@ ClassMethod version() As %Status
     return sc
 }
 
-ClassMethod stream(classname As %String, id As %Integer, property As %String) As %Status
+ClassMethod stream(classname As %String, property As %String, id As %Integer) As %Status
 {
     if $CLASSMETHOD(classname,"%ExistsId",id) {
         
@@ -343,7 +344,7 @@ ClassMethod stream(classname As %String, id As %Integer, property As %String) As
         if data.extension = "gif" {
             set %response.ContentType="image/gif"
         }
-        set sc = $METHOD(stream,"OutputToDevice")
+    set sc = $METHOD(stream,"OutputToDevice")
     } else {
         set sc=$SYSTEM.Status.Error(5001,id_" doesn't exist")
     }
