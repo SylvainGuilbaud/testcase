@@ -24,73 +24,64 @@ XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
 ClassMethod importJSON() As %Status
 {
     Try {
-    set start=$zh // utilisé pour mesurer le temps de l'import du tableau JSON
-    set sc=$$$OK,ts=$zdt($now(),3)
-    set %response.ContentType= ..#CONTENTTYPEJSON
-    set json={} // utilisé pour la réponse en JSON
-    set json.system = $SYSTEM
-    set json.ts = $zdt($h,3)
-    set payload={}.%FromJSON(%request.Content) // récupération du payload envoyé par le client Winde
-    set json.classname=payload.tablename // récupération du nom de ma classe dans lesquelles les données doivent être importées
-    set json.init = payload.init // flag déterminant si les données/index/streams d'IRIS sont purgées avant import
-    set class = ##class(%Dictionary.ClassDefinition).%OpenId(json.classname) // récupération des noms des globales de la classe IRIS en cas de 
-    set IdLocation = class.Storages.GetAt(1).IdLocation
-    set DataLocation = class.Storages.GetAt(1).DataLocation
-    set IndexLocation = class.Storages.GetAt(1).IndexLocation
-    set StreamLocation = class.Storages.GetAt(1).StreamLocation
-    //set class.Super = "Exparf.common"
-    set json.IdLocation=(IdLocation)
-    if (json.init) { // si init = true
-         kill @DataLocation,@IndexLocation,@StreamLocation  // suppression des données/index/streams de la classe dans IRIS
-    }
-    set imported=0 // initialisation du nombre d'enregistrements importés
-    set array = payload.data.%GetIterator() // initialisation de l'itérateur pour parcourir le tableau d'enregistrements envoyés en JSON
-    set json.nbRecords=payload.data.%Size() // récupération du nombre d'enregistrements contenus dans le tableau JSON
-    set json.parseError=[],json.saveError=[] // initialisation des tableaux d'erreurs de PARSING ou de SAVE pour le rapport de l'import 
-    set json.records=[]
+        set start=$zh 
+        set sc=$$$OK
+        set %response.ContentType= ..#CONTENTTYPEJSON
+        set json={} 
+        set json.system = $SYSTEM
+        set json.ts = $zdt($now(),3,,6)
+        set payload={}.%FromJSON(%request.Content) 
+        set json.classname=payload.tablename 
+        set json.init = payload.init 
+        set imported=0 
+        set array = payload.data.%GetIterator() 
+        set json.nbRecords=payload.data.%Size() 
+        set json.parseError=[],json.saveError=[] 
+        if ##class(%Dictionary.ClassDefinition).%ExistsId(json.classname) {
+            set class = ##class(%Dictionary.ClassDefinition).%OpenId(json.classname)  
+            set IdLocation = class.Storages.GetAt(1).IdLocation
+            set DataLocation = class.Storages.GetAt(1).DataLocation
+            set IndexLocation = class.Storages.GetAt(1).IndexLocation
+            set StreamLocation = class.Storages.GetAt(1).StreamLocation
+            set json.IdLocation=(IdLocation)
+            if (json.init) { 
+                kill @DataLocation,@IndexLocation,@StreamLocation 
+            }
+            
+            while array.%GetNext(.key,.value) { 
+                set a=$CLASSMETHOD(json.classname,"%New") 
+                set ID = $INCREMENT(^admin.migration(json.classname))
+                set parseOK=a.%JSONImport(value)    
+                if 'parseOK { 
+                set parseError={}
+                set parseError.error=$system.Status.GetErrorText(parseOK) 
+                set ^admin.migration(json.classname,"parse error",$zdt($now(),3,,6))=parseError.error 
+                do json.parseError.%Push(parseError) 
+            } 
+                set saveOK=a.%Save() 
+                if 'saveOK { 
+                    set saveError={}
+                    set saveError.id=(ID)
+                    set saveError.error=($system.Status.GetErrorText(saveOK)) 
+                    set ^admin.migration(json.classname,"save error",ID)=saveError.error 
+                    do json.saveError.%Push(saveError) 
+                } else {
+                    set imported=$INCREMENT(imported) 
+                }
+            }
 
-    while array.%GetNext(.key,.value) { // récupération d'un enregistrement dans la variable "value" 
-        set a=$CLASSMETHOD(json.classname,"%New") // instanciation d'un nouvel enregistrement dans IRIS dans la variable "a"    
-        set parseOK=a.%JSONImport(value) // import des données contenues dans "value" vers la variable "a" (champ-à-champ)
-        if 'parseOK { // si le PARSING de l'import JSON a levé une exception 
-            set parseError={},parseErrorID=$i(^admin.migration(json.classname,ts,"parseError")) // initialisation des variables et globales pour le rapport d'erreurs de PARSING
-            set parseError.key=key+1 // initialisation de la clé du rapport d'erreur à key + 1 (un tableau JSON commençant avec une key = 0)
-            set ^admin.migration(json.classname,ts,"parseError",parseErrorID,"key")=parseError.key // stockage de la key dans la globale du rapport de migration
-            set parseError.error=$system.Status.GetErrorText(parseOK) // récupération du message d'erreur de PARSING
-            set ^admin.migration(json.classname,ts,"parseError",parseErrorID,"error")=parseError.error // stockage du messages d'erreur dans la globale du rapport de migration
-            set parseError.content={} // initilisation du contenu des données reçues
-            set parseError.content.name=$zstrip($piece(parseError.error,",",2),"*W") // récupération du nom de la propriété en erreur
-            set ^admin.migration(json.classname,ts,"parseError",parseErrorID,"name")=parseError.content.name
-            set parseError.content.value=$PROPERTY(value,parseError.content.name) // récupération du contenu envoyé pour cette propriété
-            set ^admin.migration(json.classname,ts,"parseError",parseErrorID,"value")=parseError.content.value
-            set parseError.content.length=$LENGTH(parseError.content.value) // récupération du nombre de caractères envoyés pour cette propriété
-            set ^admin.migration(json.classname,ts,"parseError",parseErrorID,"length")=parseError.content.length
-            #; set parseError.content.fullContent=value
-            do json.parseError.%Push(parseError) // ajout du détail de l'erreur dans le tableau du rapport d'erreurs
-        }
-        set saveOK=a.%Save() // validation + stockage de l'enregistrement dans IRIS
-        if 'saveOK { // si le stockage dans IRIS a levé une exception
-            set saveError={},saveOKID=$i(^admin.migration(json.classname,ts,"saveError")) //initilsation des variables et globales pour le rapport d'erreurs de SAVE
-            set saveError.key=key+1 // initialisation de la clé du rapport d'erreur à key + 1 (un tableau JSON commençant avec une key = 0)
-            set ^admin.migration(json.classname,ts,"saveError",saveOKID,"key")=saveError.key // stockage de la key dans la globale du rapport de migration
-            set saveError.error=$system.Status.GetErrorText(saveOK) // récupération du message d'erreur de SAVE
-            set ^admin.migration(json.classname,ts,"saveError",saveOKID,"key")=saveError.error // stockage du messages d'erreur dans la globale du rapport de migration
-            do json.saveError.%Push(saveError) // ajout du détail de l'erreur dans le tableau du rapport d'erreurs
         } else {
-            set imported=$INCREMENT(imported) // si le save n'a pas échoué, incrément du nombre d'enregistrements correctement importés dans IRIS pour le rapport
+            set sc = $SYSTEM.Status.Error(5001,json.classname _ " doesn't exist")
+            set ^admin.migration(json.classname,"error","non existing class") = "" 
         }
+        set json.imported=imported 
+        set json.elapse=$zh-start 
+        set ^admin.migration(json.classname,"import",$zdt($now(),3,,6))="imported:"_imported_" size:"_json.nbRecords_" (elapse:"_json.elapse_")" 
+        do json.%ToJSON() 
     }
-    set json.imported=imported // récupération dans le rapport du nombre d'enregistrements importés
-    set json.elapse=$zh-start // récupération dans le rapport de la durée d'exécution de l'import
-    set ^admin.migration(json.classname,ts,"import")="imported:"_imported_" size:"_json.size_" (elapse:"_json.elapse_")" // stockage de la durée d'exécution de l'import dans la globale du rapport de migration
-    do json.%ToJSON() // export du rapport en JSON pour la réponse
+    Catch ex {
+        set sc=ex.AsStatus()
     }
-    catch ex {
-            set sc=ex.AsStatus()
-            set error={}
-    set error.text = $system.Status.GetErrorText(sc)
-            do error.%ToJSON()
-        }
     return sc
 }
 
@@ -123,13 +114,12 @@ ClassMethod import() As %Status
             
             while array.%GetNext(.key,.value) { 
                 set a=$CLASSMETHOD(json.classname,"%New") 
+                set ID = $INCREMENT(^admin.migration(json.classname))
                 #; set parseOK=a.%JSONImport(value) 
                 set tmp = ##class(%Stream.GlobalCharacter).%New()
                 do value.%ToJSON(tmp)
                 do tmp.Rewind()
                 set x = {}.%FromJSON(tmp.ReadLineIntoStream())
-
-                set ID = $INCREMENT(^admin.migration(json.classname))
 
                 for i = 1 : 1 : class.Properties.Count() {
                     set propertyName = class.Properties.GetAt(i).Name
@@ -174,7 +164,7 @@ ClassMethod import() As %Status
                     set saveError={}
                     set saveError.id=(ID)
                     set saveError.error=($system.Status.GetErrorText(saveOK)) 
-                    set ^admin.migration(json.classname,"error",ID)=saveError.error 
+                    set ^admin.migration(json.classname,"save error",ID)=saveError.error 
                     do json.saveError.%Push(saveError) 
                 } else {
                     set imported=$INCREMENT(imported) 
@@ -182,8 +172,8 @@ ClassMethod import() As %Status
             }
 
         } else {
-            set sc = $SYSTEM.Status.Error(5001,json.classname _ " n'existe pas")
-            set ^admin.migration(json.classname,"error","classe inexistante") = "" 
+            set sc = $SYSTEM.Status.Error(5001,json.classname _ " doesn't exist")
+            set ^admin.migration(json.classname,"error","non existing class") = "" 
         }
         set json.imported=imported 
         set json.elapse=$zh-start 
