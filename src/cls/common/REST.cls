@@ -37,6 +37,8 @@ ClassMethod importJSON() As %Status
         set array = payload.data.%GetIterator() 
         set json.nbRecords=payload.data.%Size() 
         set json.parseError=[],json.saveError=[] 
+        set ^import(json.classname,json.ts,"received") = $Get(^import.received(json.classname,json.ts,"received"),0) + json.nbRecords
+        
         if ##class(%Dictionary.ClassDefinition).%ExistsId(json.classname) {
             set class = ##class(%Dictionary.ClassDefinition).%OpenId(json.classname)  
             set IdLocation = class.Storages.GetAt(1).IdLocation
@@ -76,6 +78,7 @@ ClassMethod importJSON() As %Status
             set ^admin.migration(json.classname,"error","non existing class") = "" 
         }
         set json.imported=imported 
+        set ^import(json.classname,json.ts,"imported") = $Get(^import.imported(json.classname,json.ts,"imported"),0) + json.imported
         set json.elapse=$zh-start 
         set ^admin.migration(json.classname,"import",$zdt($now(),3,,6))="imported:"_imported_" size:"_json.nbRecords_" (elapse:"_json.elapse_")" 
         do json.%ToJSON() 
@@ -102,6 +105,7 @@ ClassMethod import() As %Status
         set array = payload.data.%GetIterator() 
         set json.nbRecords=payload.data.%Size() 
         set json.parseError=[],json.saveError=[] 
+        set ^import(json.classname,json.ts,"received") = $Get(^import.received(json.classname,json.ts,"received"),0) + json.nbRecords
         if ##class(%Dictionary.ClassDefinition).%ExistsId(json.classname) {
             set class = ##class(%Dictionary.ClassDefinition).%OpenId(json.classname)  
             set IdLocation = class.Storages.GetAt(1).IdLocation
@@ -177,6 +181,7 @@ ClassMethod import() As %Status
             set ^admin.migration(json.classname,"error","non existing class") = "" 
         }
         set json.imported=imported 
+        set ^import(json.classname,json.ts,"imported") = $Get(^import.imported(json.classname,json.ts,"imported"),0) + json.imported
         set json.elapse=$zh-start 
         set ^admin.migration(json.classname,"import",$zdt($now(),3,,6))="imported:"_imported_" size:"_json.nbRecords_" (elapse:"_json.elapse_")" 
         do json.%ToJSON() 
