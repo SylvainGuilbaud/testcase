@@ -5,7 +5,7 @@ Property String As %String(MAXLEN = "");
 
 Property BStream As %Stream.GlobalBinary(POPSPEC = "##class(data.test).BStreamPop()");
 
-Property CStream As %Stream.GlobalCharacter(POPSPEC = "##class(data.test).CStreamPop()");
+Property CStream As %Stream.GlobalCharacter(%JSONINCLUDE = "none", POPSPEC = "##class(data.test).CStreamPop()");
 
 Property Numeric As %Numeric;
 

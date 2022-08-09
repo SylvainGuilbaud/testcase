@@ -96,70 +96,102 @@ ClassMethod importJSON() As %Status
 ClassMethod import() As %Status
 {
     Try {
-    set start=$zh // utilisé pour mesurer le temps de l'import du tableau JSON
-    set sc=$$$OK,ts=$zdt($now(),3)
-    set %response.ContentType= ..#CONTENTTYPEJSON
-    set json={} // utilisé pour la réponse en JSON
-    set json.system = $SYSTEM
-    set json.ts = $zdt($h,3)
-    set payload={}.%FromJSON(%request.Content) // récupération du payload envoyé par le client Winde
-    set json.classname=payload.tablename // récupération du nom de ma classe dans lesquelles les données doivent être importées
-    set json.init = payload.init // flag déterminant si les données/index/streams d'IRIS sont purgées avant import
-    set class = ##class(%Dictionary.ClassDefinition).%OpenId(json.classname) // récupération des noms des globales de la classe IRIS en cas de 
-    set IdLocation = class.Storages.GetAt(1).IdLocation
-    set DataLocation = class.Storages.GetAt(1).DataLocation
-    set IndexLocation = class.Storages.GetAt(1).IndexLocation
-    set StreamLocation = class.Storages.GetAt(1).StreamLocation
-    set json.IdLocation=(IdLocation)
-    if (json.init) { // si init = true
-         kill @DataLocation,@IndexLocation,@StreamLocation  // suppression des données/index/streams de la classe dans IRIS
-    }
-    set imported=0 // initialisation du nombre d'enregistrements importés
-    set array = payload.data.%GetIterator() // initialisation de l'itérateur pour parcourir le tableau d'enregistrements envoyés en JSON
-    set json.nbRecords=payload.data.%Size() // récupération du nombre d'enregistrements contenus dans le tableau JSON
-    set json.parseError=[],json.saveError=[] // initialisation des tableaux d'erreurs de PARSING ou de SAVE pour le rapport de l'import 
-    set json.records=[]
-
-    while array.%GetNext(.key,.value) { 
-        set tmp = ##class(%Stream.GlobalCharacter).%New()
-        do value.%ToJSON(tmp)
-        do tmp.Rewind()
-        set x = {}.%FromJSON(tmp.ReadLineIntoStream())
-        set a=$CLASSMETHOD(json.classname,"%New") 
-
-        for i = 1 : 1 : class.Properties.Count() {
-            set propertyName = class.Properties.GetAt(i).Name
-            if class.Properties.GetAt(i).Type [ "%Stream." {
+        set start=$zh 
+        set sc=$$$OK
+        set %response.ContentType= ..#CONTENTTYPEJSON
+        set json={} 
+        set json.system = $SYSTEM
+        set json.ts = $zdt($now(),3,,6)
+        set payload={}.%FromJSON(%request.Content) 
+        set json.classname=payload.tablename 
+        set json.init = payload.init 
+        set imported=0 
+        set array = payload.data.%GetIterator() 
+        set json.nbRecords=payload.data.%Size() 
+        set json.parseError=[],json.saveError=[] 
+        if ##class(%Dictionary.ClassDefinition).%ExistsId(json.classname) {
+            set class = ##class(%Dictionary.ClassDefinition).%OpenId(json.classname)  
+            set IdLocation = class.Storages.GetAt(1).IdLocation
+            set DataLocation = class.Storages.GetAt(1).DataLocation
+            set IndexLocation = class.Storages.GetAt(1).IndexLocation
+            set StreamLocation = class.Storages.GetAt(1).StreamLocation
+            set json.IdLocation=(IdLocation)
+            if (json.init) { 
+                kill @DataLocation,@IndexLocation,@StreamLocation 
+            }
+            
+            while array.%GetNext(.key,.value) { 
+                set a=$CLASSMETHOD(json.classname,"%New") 
+                #; set parseOK=a.%JSONImport(value) 
                 set tmp = ##class(%Stream.GlobalCharacter).%New()
-                do tmp.CopyFrom(x.%Get(propertyName,,"stream"))
-                do tmp.Rewind() 
-                while 'tmp.AtEnd {
-                    do $METHOD($PROPERTY(a,propertyName),"Write",$system.Encryption.Base64Decode(tmp.Read()))
+                do value.%ToJSON(tmp)
+                do tmp.Rewind()
+                set x = {}.%FromJSON(tmp.ReadLineIntoStream())
+
+                set ID = $INCREMENT(^admin.migration(json.classname))
+
+                for i = 1 : 1 : class.Properties.Count() {
+                    set propertyName = class.Properties.GetAt(i).Name
+                    if x.%IsDefined(propertyName) {
+                        if 'class.Properties.GetAt(i).Calculated {
+                            if class.Properties.GetAt(i).Type [ "%Stream." {
+                                if x.%Get(propertyName,,"stream").Size > 0 {
+                                    set ^admin.migration(json.classname,ID,propertyName,x.%Get(propertyName,,"stream").Size) =  x.%Get(propertyName,,"stream").Read(100)
+                                    if class.Properties.GetAt(i).Type = "%Stream.GlobalBinary" {
+                                        set tmp = ##class(%Stream.GlobalCharacter).%New()
+                                        do tmp.CopyFrom(x.%Get(propertyName,,"stream"))
+                                        do tmp.Rewind() 
+                                        while 'tmp.AtEnd {
+                                            do $METHOD($PROPERTY(a,propertyName),"Write",$system.Encryption.Base64Decode(tmp.Read()))
+                                        }
+                                    } 
+                                    if class.Properties.GetAt(i).Type = "%Stream.GlobalCharacter" {
+                                        do $METHOD($PROPERTY(a,propertyName),"CopyFrom",x.%Get(propertyName,,"stream"))
+                                    }
+                                }
+                            } else {
+                                if class.Properties.GetAt(i).Type = "%Date"  {
+                                    if x.%Get(propertyName) '= "" {
+                                        set ^admin.migration(json.classname,ID,propertyName) = x.%Get(propertyName)
+                                        set $PROPERTY(a,propertyName) = $zdh(x.%Get(propertyName),3)
+                                    }
+                                } elseif class.Properties.GetAt(i).Type = "%TimeStamp"  {
+                                    if x.%Get(propertyName) '= "" {
+                                    set ^admin.migration(json.classname,ID,propertyName) = x.%Get(propertyName)
+                                    set $PROPERTY(a,propertyName) = $tr(x.%Get(propertyName),"TZ"," ")
+                                    }
+                                } else {
+                                    set ^admin.migration(json.classname,ID,propertyName) = x.%Get(propertyName)
+                                    set $PROPERTY(a,propertyName) = x.%Get(propertyName)
+                                }
+                            }  
+                        }
+                    }
                 }
-            } else {
-                set $PROPERTY(a,propertyName) = x.%Get(propertyName)
-            }  
+                set saveOK=a.%Save() 
+                if 'saveOK { 
+                    set saveError={}
+                    set saveError.id=(ID)
+                    set saveError.error=($system.Status.GetErrorText(saveOK)) 
+                    set ^admin.migration(json.classname,"error",ID)=saveError.error 
+                    do json.saveError.%Push(saveError) 
+                } else {
+                    set imported=$INCREMENT(imported) 
+                }
+            }
+
+        } else {
+            set sc = $SYSTEM.Status.Error(5001,json.classname _ " n'existe pas")
+            set ^admin.migration(json.classname,"error","classe inexistante") = "" 
         }
-        set (a.Integer,a.Float,a.Double,a.Numeric) = a.BStream.Size
-        set a.Timestamp = $zdt($h,3)
-        set a.Date = +$H
-        set a.Boolean = 1
-        if a.CStream.Size = 0 {
-            do a.CStream.CopyFrom(a.BStream)
-        }
-        set saveOK=a.%Save() 
+        set json.imported=imported 
+        set json.elapse=$zh-start 
+        set ^admin.migration(json.classname,"import",$zdt($now(),3,,6))="imported:"_imported_" size:"_json.nbRecords_" (elapse:"_json.elapse_")" 
+        do json.%ToJSON() 
     }
-    set json.imported=imported // récupération dans le rapport du nombre d'enregistrements importés
-    set json.elapse=$zh-start // récupération dans le rapport de la durée d'exécution de l'import
-    set ^admin.migration(json.classname,ts,"import")="imported:"_imported_" size:"_json.size_" (elapse:"_json.elapse_")" // stockage de la durée d'exécution de l'import dans la globale du rapport de migration
-    do json.%ToJSON() // export du rapport en JSON pour la réponse
+    Catch ex {
+        set sc=ex.AsStatus()
     }
-    catch ex {
-            set sc=ex.AsStatus()
-            set error={}
-    set error.text = $system.Status.GetErrorText(sc)
-            do error.%ToJSON()
-        }
     return sc
 }
 
