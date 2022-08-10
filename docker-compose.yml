@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: always
-    container_name: tescase
+    container_name: testcase-json-import
     hostname: testcase-json-import
     ports:
       - 1972

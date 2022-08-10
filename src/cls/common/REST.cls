@@ -1,4 +1,4 @@
-Class common.REST Extends %CSP.REST
+Class common.REST0 Extends %CSP.REST
 {
 
 Parameter HandleCorsRequest = 1;
