@@ -17,10 +17,12 @@ XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
 <Route Url="/add" Method="POST" Call="add"/>
 <Route Url="/import" Method="POST" Call="import"/>
 <Route Url="/importjson" Method="POST" Call="importJSON"/>
+<Route Url="/importxml" Method="POST" Call="importXML"/>
 <Route Url="/nb/:classname" Method="GET" Call="nb"/>
 <Route Url="/kill/:classname" Method="DELETE" Call="kill"/>
-<Route Url="/list/:classname" Method="GET" Call="list"/>
-<Route Url="/list/:classname/:min/:max" Method="GET" Call="listTop"/>
+<Route Url="/exportbyid/:classname/:format/:id" Method="GET" Call="exportById"/>
+<Route Url="/list/:classname/:format" Method="GET" Call="list"/>
+<Route Url="/list/:classname/:format/:min/:max" Method="GET" Call="listTop"/>
 <Route Url="/stream/:classname/:property/:id" Method="GET" Call="stream" />
 </Routes>
 }
@@ -93,6 +95,42 @@ ClassMethod importJSON() As %Status
     return sc
 }
 
+ClassMethod importXML() As %Status
+{
+    Try {
+        set start = $zh 
+        set sc = $$$OK
+        set %response.ContentType = ..#CONTENTTYPEJSON
+        set json = {} 
+        set json.system = $SYSTEM
+        set json.ts = $zdt($now(),3,,6)
+        set payload = %request.Content 
+        set imported = 0 
+        set reader = ##class(%XML.Reader).%New()
+        set status = reader.OpenStream(payload)
+
+        if reader.Document.GetDocumentElement().NodeData [ "-" {
+            set classname = $PIECE(reader.Document.GetDocumentElement().NodeData,"-",2)
+            do reader.Correlate(classname,classname)
+            while reader.Next(.a,.status) {
+                set sc = a.%Save()
+                if sc {
+                    set imported = imported + 1
+                }
+            }
+        }
+        set json.imported = imported 
+        #; set ^import(json.classname,json.ts,"imported") = $Get(^import.imported(json.classname,json.ts,"imported"),0) + json.imported
+        set json.elapse = $zh-start 
+        #; set ^admin.migration(json.classname,"import",$zdt($now(),3,,6)) = "imported:"_imported_" size:"_json.nbRecords_" (elapse:"_json.elapse_")" 
+        do json.%ToJSON() 
+    }
+    Catch ex {
+        set sc = ex.AsStatus()
+    }
+    return sc
+}
+
 ClassMethod import() As %Status
 {
     Try {
@@ -125,7 +163,7 @@ ClassMethod import() As %Status
                 set a =$CLASSMETHOD(json.classname,"%New") 
                 set ID = $INCREMENT(^admin.migration(json.classname))
                 #; set parseOK=a.%JSONImport(value) 
-                set tmp = ##class(%Stream.GlobalCharacter).%New()
+                set tmp = ##class(%Stream.GlobalBinary).%New()
                 do value.%ToJSON(tmp)
                 do tmp.Rewind()
                 set x = {}.%FromJSON(tmp.ReadLineIntoStream())
@@ -138,7 +176,7 @@ ClassMethod import() As %Status
                                 if x.%Get(propertyName,,"stream").Size > 0 {
                                     set ^admin.migration(json.classname,ID,propertyName,x.%Get(propertyName,,"stream").Size) =  x.%Get(propertyName,,"stream").Read(100)
                                     if class.Properties.GetAt(i).Type = "%Stream.GlobalBinary" {
-                                        set tmp = ##class(%Stream.GlobalCharacter).%New()
+                                        set tmp = ##class(%Stream.GlobalBinary).%New()
                                         do tmp.CopyFrom(x.%Get(propertyName,,"stream"))
                                         do tmp.Rewind() 
                                         while 'tmp.AtEnd {
@@ -263,59 +301,95 @@ ClassMethod nb(classname As %String) As %Status
     return sc
 }
 
-ClassMethod list(classname As %String) As %Status
+ClassMethod exportById(classname As %String, format As %String, id As %String) As %Status
 {
     set start = $zh
     set sc = $$$OK
-    set %response.ContentType = ..#CONTENTTYPEJSON
-    set json = {}
-    set json.tablename = classname
-    set json.data = []
-    #; set i=0
-    set tStatement = ##class(%SQL.Statement).%New() 
-    set sc = tStatement.%PrepareClassQuery(classname,"Extent") 
-    set result = tStatement.%Execute() 
-    if 'result.%SQLCODE {  
-        while result.%Next() { 
-            set a = $CLASSMETHOD(classname,"%OpenId",result.%GetData(1))
-            set sc = a.%JSONExportToStream(.str)
-            do json.data.%Push({}.%FromJSON(str))
-            #; do $INCREMENT(i)
-        } 
-    }
-    #; set json.nb=i
-    #; set json.elapse=$zh-start
-    do json.%ToJSON()
-    kill result
+    set sc = ..listTop(classname,format,id,id)
     return sc
 }
 
-ClassMethod listTop(classname As %String, min As %Integer, max As %Integer) As %Status
+ClassMethod list(classname As %String, format As %String) As %Status
+{
+    set sc = $$$OK
+    set %response.ContentType = ..#CONTENTTYPEJSON
+    set json = {}
+    Try {
+    if ##class(%Dictionary.ClassDefinition).%ExistsId(classname) {
+        set class = ##class(%Dictionary.ClassDefinition).%OpenId(classname)
+        set tableName = class.SqlTableName
+        set:tableName="" tableName = classname
+        set sql = "select count(*) from " _ tableName
+        set result = ##class(%SQL.Statement).%ExecDirect(,sql)
+        if result.%SQLCODE = 0 {
+            do result.%Next() 
+            set max = result.%GetData(1)
+            set sc = ..listTop(classname,format,0,max)
+        } else {
+            set json.SQLCODE = (result.%SQLCODE) 
+            set json.Message = (result.%Message) 
+            do json.%ToJSON()
+        }
+    } else {
+        set json.error = classname _ " doesn't exist"
+        do json.%ToJSON()
+    }
+    }
+    Catch ex {
+        Set sc=ex.AsStatus()
+    }
+    return sc
+}
+
+ClassMethod listTop(classname As %String, format As %String, min As %Integer, max As %Integer) As %Status
 {
     set start=$zh
-    set %response.ContentType = ..#CONTENTTYPEJSON
     set sc = $$$OK,i = min
+    set %response.ContentType = ..#CONTENTTYPEJSON
     if min > max {
         set json = {"ERROR":(min _ ">" _max)}
+        do json.%ToJSON()
     } else {
-        set json = {"tablename": (classname),"init":true}
-        set json.data = []
-        #; do json.%Push({"ts":($zdt($h,3))})
-        set tStatement = ##class(%SQL.Statement).%New() 
-        set sc = tStatement.%PrepareClassQuery(classname,"Extent") 
-        set result = tStatement.%Execute() 
-        if 'result.%SQLCODE {  
-            while i <= max && result.%Next() { 
-                set a = $CLASSMETHOD(classname,"%OpenId",i)
-                set sc = a.%JSONExportToStream(.str)
-                do json.data.%Push({}.%FromJSON(str))
+        set format = $zcvt(format,"L")
+        if format = "json" {
+            set %response.ContentType = ..#CONTENTTYPEJSON
+            if min > max {
+                set json = {"ERROR":(min _ ">" _max)}
+            } else {
+                set json = {"tablename": (classname)}
+                set json.data = []
+                while i <= max { 
+                    if $CLASSMETHOD(classname,"%ExistsId",i) {
+                        set a = $CLASSMETHOD(classname,"%OpenId",i)
+                        if $ISOBJECT(a) {
+                            set sc = a.%JSONExportToStream(.str)
+                            do json.data.%Push({}.%FromJSON(str))
+                        }
+                    }
+                    do $INCREMENT(i)
+                } 
+            }
+            write ""
+            do json.%ToJSON()
+        }
+        if format = "xml" {
+            set %response.ContentType = ..#CONTENTTYPETEXT
+            set writer=##class(%XML.Writer).%New()
+            set writer.Charset="UTF-8"
+            set sc=writer.RootElement("tablename-"_classname)
+            set tStatement = ##class(%SQL.Statement).%New() 
+            while i <= max { 
+                if $CLASSMETHOD(classname,"%ExistsId",i) {
+                    set a = $CLASSMETHOD(classname,"%OpenId",i)
+                    if $ISOBJECT(a) {
+                        set sc=writer.Object(a,classname)
+                    }
+                }
                 do $INCREMENT(i)
-            } 
+            }
+            set sc = writer.EndRootElement()
         }
     }
-    write ""
-    do json.%ToJSON()
-    kill result
     return $$$OK
 }
 
@@ -344,15 +418,25 @@ ClassMethod stream(classname As %String, property As %String, id As %Integer) As
 {
     if $CLASSMETHOD(classname,"%ExistsId",id) {
         set data = $CLASSMETHOD(classname,"%OpenId",id)
-        set stream = $PROPERTY(data,property)
-        set %response.ContentType = ..#CONTENTTYPEOCTETSTREAM
-        if data.extension = "pdf" {
-            set %response.ContentType = ..#CONTENTTYPEPDF 
-        } 
-        if data.extension = "gif" {
-            set %response.ContentType = ..#CONTENTTYPEGIF 
+        if $ISOBJECT(data) {
+            set stream = $PROPERTY(data,property)
+            set %response.ContentType = ..#CONTENTTYPEOCTETSTREAM
+            if classname = "data.test" {
+                if property = "BStream" {
+                    set extension = $PROPERTY(data,"extension") 
+                    if extension = "pdf" {
+                        set %response.ContentType = ..#CONTENTTYPEPDF 
+                    } 
+                    if extension = "gif" {
+                        set %response.ContentType = ..#CONTENTTYPEGIF 
+                    }
+                } 
+                if property = "CStream" {
+                    set %response.ContentType = ..#CONTENTTYPETEXT
+                }
+            }
+            set sc = $METHOD(stream,"OutputToDevice")
         }
-    set sc = $METHOD(stream,"OutputToDevice")
     } else {
         set sc = $SYSTEM.Status.Error(5001,id_" doesn't exist")
     }

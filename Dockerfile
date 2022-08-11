@@ -8,7 +8,7 @@ USER ${ISC_PACKAGE_MGRUSER}
 COPY Installer.cls .
 COPY src src
 COPY iris.script /tmp/iris.script
-COPY data /tmp/.
+COPY pdf /tmp/.
 
 USER ${ISC_PACKAGE_MGRUSER}
 

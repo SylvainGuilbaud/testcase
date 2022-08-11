@@ -1,11 +1,11 @@
 Class data.test Extends (%Persistent, %XML.Adaptor, %JSON.Adaptor, %Populate) [ ClassType = persistent ]
 {
 
-Property String As %String(MAXLEN = "");
+Property String As %String(MAXLEN = "", POPSPEC = "Mission()");
 
 Property BStream As %Stream.GlobalBinary(POPSPEC = "##class(data.test).BStreamPop()");
 
-Property CStream As %Stream.GlobalCharacter(%JSONINCLUDE = "none", POPSPEC = "##class(data.test).CStreamPop()");
+Property CStream As %Stream.GlobalCharacter(POPSPEC = "##class(data.test).CStreamPop()");
 
 Property Numeric As %Numeric;
 
@@ -21,7 +21,9 @@ Property Timestamp As %TimeStamp;
 
 Property Boolean As %Boolean;
 
-Property extension As %String [ InitialExpression = ".pdf" ];
+Property extension As %String [ InitialExpression = "pdf" ];
+
+Property created As %TimeStamp [ InitialExpression = {$zdt($now(),3,,6)} ];
 
 Index StringIndex On String;
 
@@ -89,7 +91,7 @@ ClassMethod BStreamPop() As %Stream.GlobalBinary
 ClassMethod CStreamPop() As %Stream.GlobalCharacter
 {
     set file=##class(%Stream.FileCharacter).%New()
-    set filename=$system.Util.DataDirectory()_"iris.cpf"
+    set filename=$system.Util.ManagerDirectory()_"messages.log"
 	set sc=file.LinkToFile(filename)
     set stream=##class(%Stream.GlobalCharacter).%New()
     do stream.CopyFrom(file)
@@ -172,6 +174,9 @@ Storage Default
 </Value>
 <Value name="12">
 <Value>extension</Value>
+</Value>
+<Value name="13">
+<Value>created</Value>
 </Value>
 </Data>
 <DataLocation>^data.testD</DataLocation>
