@@ -152,15 +152,15 @@ XData JSONExportFormat
     <Property Name="String" FieldName="DocumentName"/>
     <Property Name="BStream" Include="INPUTONLY"/>
     <Property Name="CStream" Include="INPUTONLY"/>
-    <Property Name="Boolean" FieldName="Boolean"/>
-    <Property Name="Date" FieldName="Date"/>
-    <Property Name="Double" FieldName="Double"/>
-    <Property Name="Float" FieldName="Float"/>
-    <Property Name="Integer" FieldName="Integer"/>
-    <Property Name="Numeric" FieldName="Numeric"/>
-    <Property Name="Timestamp" FieldName="Timestamp"/>
-    <Property Name="created" FieldName="created"/>
-    <Property Name="extension" FieldName="extension"/>
+    <Property Name="Boolean" />
+    <Property Name="Date"/>
+    <Property Name="Double" />
+    <Property Name="Float"/>
+    <Property Name="Integer"/>
+    <Property Name="Numeric"/>
+    <Property Name="Timestamp"/>
+    <Property Name="created"/>
+    <Property Name="extension"/>
 </Mapping>
 }
 
