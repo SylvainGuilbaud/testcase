@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tablename-Exparf.BRIEFS>
+<Exparf.BRIEFS>
+<IDBRIEFS>119181</IDBRIEFS>
+<Numero>134722</Numero>
+<DateCreation>2008-01-30</DateCreation>
+<DateLimiteEval>2008-02-06</DateLimiteEval>
+<DateLimiteClient>2008-02-06</DateLimiteClient>
+<CLISId>3993</CLISId>
+<RefClient></RefClient>
+<Concept><![CDATA[{\rtf1\ansi\ansicpg1252\deff0\deflang1036{\fonttbl{\f0\fnil\fcharset0 MS Shell Dlg;}}
+{\*\generator Msftedit 5.41.21.2500;}\viewkind4\uc1\pard\f0\fs17 Projet de gamme parfum\'e9es pour les yachts (cosm\'e9tique, ambiance, soin...)\par
+\par
+Proposer des notes diverses pour des lignes com\'e9tiques (transversal) personalis\'e9es pour chaque bateau.\par
+ex: shampoo, conditioner,showergel, bodylotion, soap, handcream, oil massage, sunscreen, lipbalm, ambiance, bougies, brumisateur.\par
+Vois St Barth\par
+\par
+Faire une s\'e9lection de notes \'e0 sentir en lait avec la cliente.\par
+\par
+Lui transmetter les coordonn\'e9es de conditionneurs...\par
+}
+]]></Concept>
+<DateReponse></DateReponse>
+<PrixMax>50</PrixMax>
+<Potentiel>0</Potentiel>
+<DEVSId>20</DEVSId>
+<INCOId>11</INCOId>
+<Numero2>1</Numero2>
+<PrixRvt>15.625</PrixRvt>
+<Coeff>3.2</Coeff>
+<ComAgent>0</ComAgent>
+<RemiseAgent>0</RemiseAgent>
+<PrixTransport>0</PrixTransport>
+<AGENId>0</AGENId>
+<ReponseClient><![CDATA[]]></ReponseClient>
+<ContactClient></ContactClient>
+<AdrsLivraison><![CDATA[]]></AdrsLivraison>
+<EmailEnvoi>false</EmailEnvoi>
+<IDBRIEFSRETOURS>0</IDBRIEFSRETOURS>
+<DateRetour></DateRetour>
+<CLISID2>0</CLISID2>
+<CoeffNet>3.2</CoeffNet>
+<bEchant>false</bEchant>
+<EchanRemark></EchanRemark>
+<DateExped></DateExped>
+<AdrsLivraison2><![CDATA[]]></AdrsLivraison2>
+<AdrsLivraison3><![CDATA[]]></AdrsLivraison3>
+<ContactClient2></ContactClient2>
+<contactClient3></contactClient3>
+<bSpecEnvoi>false</bSpecEnvoi>
+<EnvoiRemark></EnvoiRemark>
+<bOuvertEval>false</bOuvertEval>
+<NumEtNum2>134722/1</NumEtNum2>
+<BalLegis><![CDATA[]]></BalLegis>
+<BalLabApp><![CDATA[]]></BalLabApp>
+<bToutesBases>false</bToutesBases>
+<DateEnvoieEmailCialRelance></DateEnvoieEmailCialRelance>
+<ResultatSenso>false</ResultatSenso>
+<Marketing>0</Marketing>
+<bXPZP>false</bXPZP>
+<TypeXPZP>0</TypeXPZP>
+<ADCLIDLivr1>0</ADCLIDLivr1>
+<ADCLIDLivr2>0</ADCLIDLivr2>
+<ADCLIDLivr3>0</ADCLIDLivr3>
+<nType>0</nType>
+<nStatut>1</nStatut>
+<dDateModif></dDateModif>
+<dDelaiSouhaiteClis></dDelaiSouhaiteClis>
+<IDRCLIENTSCDC>0</IDRCLIENTSCDC>
+<bPasdeCDC>false</bPasdeCDC>
+<nstatutRglmtaire>0</nstatutRglmtaire>
+<nStatutApplication>0</nStatutApplication>
+<nStatutValidationNiveau1>0</nStatutValidationNiveau1>
+<nStatutCC>0</nStatutCC>
+<nStatutEval>0</nStatutEval>
+<nStatutParf>0</nStatutParf>
+<nStatutValidationNiveau2>0</nStatutValidationNiveau2>
+<bCreationCDC>false</bCreationCDC>
+<bPasContrainteRglm>false</bPasContrainteRglm>
+</Exparf.BRIEFS>
+</tablename-Exparf.BRIEFS>

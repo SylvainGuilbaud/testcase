@@ -7,10 +7,12 @@ XData setup
   <Default Name="Namespace" Value="IRISAPP"/>
   <Default Name="app" Value="irisapp" />
 
-  <Namespace Name="${Namespace}" Code="${Namespace}" Data="${Namespace}" Create="yes" Ensemble="1">
+  <Namespace Name="${Namespace}" Code="${Namespace}-CODE" Data="${Namespace}-DATA" Create="yes" Ensemble="1">
 
     <Configuration>
-      <Database Name="${Namespace}" Dir="/app/${app}/data" Create="yes" Resource="%DB_${Namespace}"/>
+      <Database Name="${Namespace}-DATA" Dir="/app/${app}/data" Create="yes" Resource="%DB_${Namespace}-DATA"/>
+      <Database Name="${Namespace}-DATA-0" Dir="/app/${app}/data-0" Create="yes" Resource="%DB_${Namespace}-DATA"/>
+      <Database Name="${Namespace}-CODE" Dir="/app/${app}/code" Create="yes" Resource="%DB_${Namespace}-CODE"/>
     </Configuration>
     <CSPApplication Url="/csp/${app}" Directory="${cspdir}${app}"  ServeFiles="1" Recurse="1" MatchRoles=":%DB_${Namespace}" AuthenticationMethods="32"
        

@@ -1,7 +1,7 @@
-export filename="response-import-3-xml.json"
+export filename="response-import-ID143.json"
 echo "deleting " $filename
 rm -f $filename
-curl -v -d "@../data/data-import-3.xml" \
+curl -v -d "@../data/143.xml" \
 -H "Content-Type: plain/text" \
 -X POST http://localhost:12773/common/importxml \
 -o $filename \

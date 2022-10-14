@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+  <Document name="testcase.ZPM">
+    <Module>
+      <Name>testcase</Name>
+      <Version>0.1.0</Version>
+      <Description>testcase</Description>
+      <Keywords>test</Keywords>
+      <Packaging>module</Packaging>
+      <Resource Directory="cls" Name="common.PKG"/>
+      <Resource Directory="cls" Name="data.PKG"/>
+      <SourcesRoot>src</SourcesRoot>
+    </Module>
+  </Document>
+</Export>

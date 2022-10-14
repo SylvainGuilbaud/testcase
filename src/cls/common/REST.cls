@@ -1,6 +1,10 @@
 Class common.REST Extends %CSP.REST
 {
 
+Parameter IMPORTDESTINATION = "IRISAPP";
+
+Parameter UseSession As BOOLEAN = 1;
+
 Parameter HandleCorsRequest = 1;
 
 Parameter CONTENTTYPEPDF = "application/pdf";
@@ -15,7 +19,9 @@ XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
 <Route Url="/" Method="GET" Call="version"/>
 <Route Url="/pop/:classname/:nb" Method="GET" Call="pop"/>
 <Route Url="/add" Method="POST" Call="add"/>
-<Route Url="/import" Method="POST" Call="import"/>
+<Route Url="/initdb" Method="POST" Call="initdb "/>
+<Route Url="/import" Method="POST" Call="importXML"/>
+<Route Url="/delete" Method="POST" Call="delete"/>
 <Route Url="/importjson" Method="POST" Call="importJSON"/>
 <Route Url="/importxml" Method="POST" Call="importXML"/>
 <Route Url="/nb/:classname" Method="GET" Call="nb"/>
@@ -24,7 +30,93 @@ XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
 <Route Url="/list/:classname/:format" Method="GET" Call="list"/>
 <Route Url="/list/:classname/:format/:min/:max" Method="GET" Call="listTop"/>
 <Route Url="/stream/:classname/:property/:id" Method="GET" Call="stream" />
+<Route Url="/request/:classname/:property/:id/:full" Method="GET" Call="Request" />
 </Routes>
+}
+
+ClassMethod Request(classname, property, id, full) As %Status
+{
+	Set %response.ContentType="text/plain"	
+    Do:full $SYSTEM.OBJ.Dump(%request)   
+    #; write %request.CgiEnvs("PATH")
+    write "HTTP_USER_AGENT : " _ %request.CgiEnvs("HTTP_USER_AGENT") 
+    write $c(13,10)
+    write "SERVER_ADDR : " _%request.CgiEnvs("SERVER_ADDR")
+    write $c(13,10)
+    write "REMOTE_ADDR : " _%request.CgiEnvs("REMOTE_ADDR")
+    write $c(13,10)
+    write "SERVER_SOFTWARE : " _%request.CgiEnvs("SERVER_SOFTWARE")
+    write $c(13,10)
+    write "HTTP_HOST : " _%request.CgiEnvs("HTTP_HOST")
+    Quit $$$OK
+}
+
+ClassMethod delete() As %Status
+{
+    Try {
+        set start = $zh 
+        set sc = $$$OK
+        set %response.ContentType = ..#CONTENTTYPEJSON
+        set json = {} 
+        set json.system = $SYSTEM
+        set json.ts = $zdt($now(),3,,6)
+        set payload = {}.%FromJSON(%request.Content) 
+        set json.classname = payload.tablename 
+        set json.init = payload.init 
+        set imported = 0 
+        set array = payload.data.%GetIterator() 
+        set json.nbRecords = payload.data.%Size() 
+        set json.parseError = [],json.saveError = [] 
+        set ^import(json.classname,json.ts,"received") = $Get(^import.received(json.classname,json.ts,"received"),0) + json.nbRecords
+        
+        if ##class(%Dictionary.ClassDefinition).%ExistsId(json.classname) {
+            set class = ##class(%Dictionary.ClassDefinition).%OpenId(json.classname)  
+            set IdLocation = class.Storages.GetAt(1).IdLocation
+            set DataLocation = class.Storages.GetAt(1).DataLocation
+            set IndexLocation = class.Storages.GetAt(1).IndexLocation
+            set StreamLocation = class.Storages.GetAt(1).StreamLocation
+            set json.IdLocation = (IdLocation)
+            if (json.init) { 
+                kill @DataLocation,@IndexLocation,@StreamLocation 
+            }
+            
+            while array.%GetNext(.key,.value) { 
+                set a=$CLASSMETHOD(json.classname,"%New") 
+                set ID = $INCREMENT(^admin.migration(json.classname))
+                set parseOK=a.%JSONImport(value)    
+                if 'parseOK { 
+                set parseError = {}
+                set parseError.error = $system.Status.GetErrorText(parseOK)
+                set parseError.key = (key) 
+                set ^admin.migration(json.classname,"parse error",$zdt($now(),3,,6)) = parseError.error 
+                do json.parseError.%Push(parseError) 
+            } 
+                set saveOK = a.%Save() 
+                if 'saveOK { 
+                    set saveError = {}
+                    set saveError.key = (key)
+                    set saveError.error = ($system.Status.GetErrorText(saveOK)) 
+                    set ^admin.migration(json.classname,"save error",ID) = saveError.error 
+                    do json.saveError.%Push(saveError) 
+                } else {
+                    set imported=$INCREMENT(imported) 
+                }
+            }
+
+        } else {
+            set sc = $SYSTEM.Status.Error(5001,json.classname _ " doesn't exist")
+            set ^admin.migration(json.classname,"error","non existing class") = "" 
+        }
+        set json.imported = imported 
+        set ^import(json.classname,json.ts,"imported") = $Get(^import.imported(json.classname,json.ts,"imported"),0) + json.imported
+        set json.elapse = $zh-start 
+        set ^admin.migration(json.classname,"import",$zdt($now(),3,,6)) = "imported:"_imported_" size:"_json.nbRecords_" (elapse:"_json.elapse_")" 
+        do json.%ToJSON() 
+    }
+    Catch ex {
+        set sc = ex.AsStatus()
+    }
+    return sc
 }
 
 ClassMethod importJSON() As %Status
@@ -98,6 +190,7 @@ ClassMethod importJSON() As %Status
 ClassMethod importXML() As %Status
 {
     Try {
+        zn ..#IMPORTDESTINATION
         set start = $zh 
         set sc = $$$OK
         set %response.ContentType = ..#CONTENTTYPEJSON
@@ -105,28 +198,134 @@ ClassMethod importXML() As %Status
         set json.system = $SYSTEM
         set json.ts = $zdt($now(),3,,6)
         set payload = %request.Content 
+
+        set content = ##class(%ArrayOfDataTypes).%New()
+        #; do content.SetAt(%request.CgiEnvs("SERVER_ADDR"),"SERVER_ADDR")
+        #; do content.SetAt(%request.CgiEnvs("REMOTE_ADDR"),"REMOTE_ADDR")
+        #; do content.SetAt(%request.CgiEnvs("SERVER_SOFTWARE"),"SERVER_SOFTWARE")
+        #; do content.SetAt(%request.CgiEnvs("HTTP_HOST"),"HTTP_HOST")
+        #; do content.SetAt(%request.CgiEnvs("HTTP_USER_AGENT") ,"HTTP_USER_AGENT")
+        do content.SetAt(%request.Content.Size ,"CONTENT SIZE")
+        do ##class(common.trace).log("0-HTTP REQUEST",$this,"import XML",content)
         set imported = 0 
+        set errors = 0 
         set reader = ##class(%XML.Reader).%New()
         set status = reader.OpenStream(payload)
-
-        if reader.Document.GetDocumentElement().NodeData [ "-" {
-            set classname = $PIECE(reader.Document.GetDocumentElement().NodeData,"-",2)
-            do reader.Correlate(classname,classname)
-            while reader.Next(.a,.status) {
-                set sc = a.%Save()
-                if sc {
-                    set imported = imported + 1
+        set json.parseError = [],json.saveError = [] 
+        set firstNode = reader.Document.GetDocumentElement().NodeData 
+        set json.firstNode = firstNode
+        set classname = "undefined"
+        if firstNode [ "-" {
+            set classname = $PIECE(firstNode,"-",2)
+            set json.classname = classname
+            if ##class(%Dictionary.ClassDefinition).%ExistsId(classname) {
+                set class = ##class(%Dictionary.ClassDefinition).%OpenId(classname)
+                set IDPROPERTY = ""
+                for p = 1 : 1 : class.Parameters.Count() {
+                    if class.Parameters.GetAt(p).Name = "IDPROPERTY" {
+                        set IDPROPERTY = class.Parameters.GetAt(p).Default
+                    }
                 }
+                if IDPROPERTY '= "" {
+                    do reader.Correlate(classname,classname)
+                    while reader.Next(.a,.status) {
+                        if $ISOBJECT(a) {
+                            if a.%IsA(classname) {
+                                set sc = a.%Save()
+                                if sc {
+                                    set imported = $INCREMENT(imported)
+                                } else {
+                                    set %response.Status = "422 - SAVE ERROR " _ $system.Status.GetErrorCodes(sc)
+                                    set errors = $INCREMENT(errors)
+                                    set saveError = {}
+                                    set saveError.error = ($system.Status.GetErrorText(sc) _ " (" _ IDPROPERTY _ ":" _ $PROPERTY(a,IDPROPERTY) _ ")") 
+                                    #; set ^admin.migration(classname,"save error",$PROPERTY(a,IDPROPERTY)) = saveError.error 
+                                    
+                                    set content = ##class(%ArrayOfDataTypes).%New()
+                                    for i = 1 : 1 : class.Properties.Count() {
+                                        set propertyName = class.Properties.GetAt(i).Name
+                                        if class.Properties.GetAt(i).Type [ "%Stream."
+                                        {
+                                            set contentText = "Size:" _ $PROPERTY($PROPERTY(a,propertyName),"Size") _ " - Content:" _ $METHOD($PROPERTY(a,propertyName),"Read")
+                                            
+                                        } 
+                                        elseif class.Properties.GetAt(i).Type = "%Date"
+                                        {
+                                            set contentText = $zdt($PROPERTY(a,propertyName),3)
+                                        }
+                                        #; elseif class.Properties.GetAt(i).Type = "%TimeStamp"  {
+                                        #;     set contentText = $tr($PROPERTY(a,propertyName),"TZ"," ")
+                                        #; }
+                                        else {
+                                            set contentText = $PROPERTY(a,propertyName)
+                                        }
+                                        do content.SetAt(contentText,propertyName)
+                                    }
+                                    do ##class(common.trace).log(classname,"save error",saveError.error,content)
+                                    do json.saveError.%Push(saveError) 
+                                }
+                            } else {
+                                set %response.Status = "422 - Mapping Error"
+                                set msg = "erreur lors du mapping"
+                                set sc = $SYSTEM.Status.Error(5001,msg)
+                                #; set ^admin.migration(classname,"error",msg) = $zdt($h,3) 
+                                do ##class(common.trace).log(classname,"error",msg)
+                                set saveError = {}
+                                set saveError.error = "erreur lors du mapping"
+                                do json.saveError.%Push(saveError)
+                            }
+                        } else {
+                            set %response.Status = "422 - Correlate Error"
+                            set saveError = {}
+                            set saveError.error = "erreur lors du Correlate"
+                            set sc = $SYSTEM.Status.Error(5001,msg)
+                            #; set ^admin.migration(classname,"error",msg) = $zdt($h,3) 
+                            do ##class(common.trace).log(classname,"error",msg)
+                            do json.saveError.%Push(saveError)
+                        }
+                    }
+                } else {
+                    set %response.Status = "422 - no IDPROPERTY"
+                    set msg = classname _ " n'a pas de paramètre IDPROPERTY"
+                    set sc = $SYSTEM.Status.Error(5001,msg)
+                    #; set ^admin.migration(classname,"error",msg) = $zdt($h,3) 
+                    do ##class(common.trace).log(classname,"error",msg)
+                }
+            } else {
+                set %response.Status = "422 - " _ classname _ " does not exist"
+                set msg = classname _ " n'existe pas"
+                set sc = $SYSTEM.Status.Error(5001,msg)
+                #; set ^admin.migration(classname,"error",msg) = $zdt($h,3)
+                do ##class(common.trace).log(classname,"error",msg)
             }
-        }
+        } else {
+            set %response.Status = "422 - first node unrecognized"
+            set msg = "le premier élément <" _ firstNode _ "> doit être de la forme <tablename-Package.ClassName>"
+            set sc = $SYSTEM.Status.Error(5001,msg)
+            #; set ^admin.migration("error",msg,$zdt($h,3)) = firstNode
+            do ##class(common.trace).log(classname,"error",msg)
+        }   
         set json.imported = imported 
-        #; set ^import(json.classname,json.ts,"imported") = $Get(^import.imported(json.classname,json.ts,"imported"),0) + json.imported
         set json.elapse = $zh-start 
-        #; set ^admin.migration(json.classname,"import",$zdt($now(),3,,6)) = "imported:"_imported_" size:"_json.nbRecords_" (elapse:"_json.elapse_")" 
+        #; set ^admin.migration(json.classname,"import",$zdt($now(),3,,6)) = "imported:"_imported_" (elapse:"_json.elapse_")" 
+        set msg = "imported:"_imported_" (elapse:"_json.elapse_")"
+        
+        set content = ##class(%ArrayOfDataTypes).%New()
+        do content.SetAt(imported ,"IMPORTED")
+        do content.SetAt(json.elapse ,"ELAPSE")
+        do content.SetAt(errors ,"ERRORS")
+        do ##class(common.trace).log("0-HTTP REQUEST",$this,"import XML",content)
+        do ##class(common.trace).log(classname,"import",msg,content)
+
+
         do json.%ToJSON() 
     }
     Catch ex {
         set sc = ex.AsStatus()
+        set %response.Status = "422 - EXCEPTION " _ $SYSTEM.Status.GetErrorCodes(sc)
+        set content = ##class(%ArrayOfDataTypes).%New()
+        do content.SetAt(payload.Read(100) ,"PAYLOAD")
+        do ##class(common.trace).log("EXCEPTION","error",$SYSTEM.Status.GetErrorText(sc),content)
     }
     return sc
 }
@@ -358,12 +557,15 @@ ClassMethod listTop(classname As %String, format As %String, min As %Integer, ma
             } else {
                 set json = {"tablename": (classname)}
                 set json.data = []
+                set json.min=(min)
+                set json.max=(max)
                 while i <= max { 
                     if $CLASSMETHOD(classname,"%ExistsId",i) {
                         set a = $CLASSMETHOD(classname,"%OpenId",i)
                         if $ISOBJECT(a) {
-                            set sc = a.%JSONExportToStream(.str)
+                            set sc = a.%JSONExportToStream(.str,"JSONExportFormat")
                             do json.data.%Push({}.%FromJSON(str))
+                            
                         }
                     }
                     do $INCREMENT(i)
@@ -377,7 +579,8 @@ ClassMethod listTop(classname As %String, format As %String, min As %Integer, ma
             set writer=##class(%XML.Writer).%New()
             set writer.Charset="UTF-8"
             set sc=writer.RootElement("tablename-"_classname)
-            set tStatement = ##class(%SQL.Statement).%New() 
+            set tStatement = ##class(%SQL.Statement).%New()
+            // filtre SQL avec clause WHERE 
             while i <= max { 
                 if $CLASSMETHOD(classname,"%ExistsId",i) {
                     set a = $CLASSMETHOD(classname,"%OpenId",i)

@@ -7,11 +7,13 @@
       "ns": "IRISAPP",
       "username": "_SYSTEM",
       "password": "SYS",
-      "docker-compose": {
-        "service": "iris",
-        "internalPort": 52773
-      },
-      "active": true
+      "host": "127.0.0.1",
+      "port": 12773,
+      "active": true,
+      "links": {
+        "version": "http://127.0.0.1/common/",
+        "atelier": "http://127.0.0.1/api/atelier/"
+      }
     },
     "sqltools.connections": [
       {

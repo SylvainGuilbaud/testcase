@@ -1,14 +1,47 @@
 version: '3.6'
+networks:
+  irisnetwork:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.30.0.0/24
 services:
   iris:
     build: 
       context: .
       dockerfile: Dockerfile
     restart: always
-    container_name: testcase-json-import
-    hostname: testcase-json-import
+    container_name: testcase-import
+    hostname: testcase-import
     ports:
       - 1972
       - 12773:52773
       - 53773
+    command: --check-caps false
+    # environment:
+    #   - ISC_DATA_DIRECTORY=/irisdata
+    volumes:
+      - ./data:/data
+      # - ./irisdata:/irisdata
+    networks:
+      irisnetwork:
+        ipv4_address: 172.30.0.10
+  webgateway:
+    hostname: webgateway
+    container_name: webgateway
+    depends_on:
+      - iris
+    image: containers.intersystems.com/intersystems/webgateway:2022.2.0.334.0
+    ports:
+    - 443:443
+    - 80:80
+    environment:
+      - ISC_DATA_DIRECTORY=/webgateway
+      - IRIS_USER=CSPsystem
+      - IRIS_PASSWORD=SYS
+    networks:
+      irisnetwork:
+        ipv4_address: 172.30.0.200
+    volumes:
+      - "./volumes/webgateway:/webgateway"
 

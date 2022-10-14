@@ -1,0 +1,474 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="IRIS" version="26" zv="IRIS for Windows (x86-64) 2022.1 (Build 209U)" ts="2022-08-29 18:02:43">
+<Class name="colibri.operation.ingredientsformule">
+<Super>Ens.BusinessOperation</Super>
+<TimeChanged>66326,66892.0801084</TimeChanged>
+<TimeCreated>66326,66892.0801084</TimeCreated>
+
+<Method name="iris">
+<FormalSpec>pInput:colibri.msg.ingredientsformule,pOutput:Ens.StringResponse</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	set sc = $$$OK
+	
+  set a = ##class(colibri.data.ingredientsformule).%New()
+  
+  set a.ErreurManuel = pInput.ErreurManuel
+  set a.ErreurRobot = pInput.ErreurRobot
+  set a.IDbasecommune = pInput.IDbasecommune
+  set a.IDcoeur = pInput.IDcoeur
+  set a.IDingredient = pInput.IDingredient
+  set a.RobotNumber = pInput.RobotNumber
+  set a.datevalidite = pInput.datevalidite
+  set a.heureprod = pInput.heureprod
+  set a.produit = pInput.produit
+  set a.poids = pInput.poids
+  set a.IDingredientformule = pInput.IDingredientformule
+  set a.numerolot = pInput.numerolot
+  set a.nomresponsable = pInput.nomresponsable
+  set a.IDformule = pInput.IDformule
+  set a.ingrstatus = pInput.ingrstatus
+  set a.modedosage = pInput.modedosage
+  set a.codeformule = pInput.codeformule
+
+  set sc = a.%Save()
+
+  if sc {
+      $$$LOGINFO("ingrédient formule " _ pInput.IDformule _ " enregistré (" _ sc _ ")")
+  } else {
+    $$$LOGERROR("ERREUR lors de l'enregistrement d'ingrédient formule :" _ $system.Status.GetErrorText(sc))
+  }
+
+	return sc
+]]></Implementation>
+</Method>
+
+<XData name="MessageMap">
+<Data><![CDATA[
+<MapItems>
+  <MapItem MessageType="colibri.msg.ingredientsformule">
+    <Method>iris</Method>
+  </MapItem>
+</MapItems>
+]]></Data>
+</XData>
+</Class>
+
+
+<Class name="cube.trace">
+<Description>
+</Description>
+<ProcedureBlock>1</ProcedureBlock>
+<Super>%DeepSee.CubeDefinition</Super>
+<TimeChanged>66347,58244.9974602</TimeChanged>
+<TimeCreated>66347,47731.5337562</TimeCreated>
+<DependsOn>common.trace</DependsOn>
+
+<XData name="Cube">
+<Description>
+Cube definition from Architect.</Description>
+<XMLNamespace>http://www.intersystems.com/deepsee</XMLNamespace>
+<Data><![CDATA[
+<cube xmlns="http://www.intersystems.com/deepsee" name="trace" displayName="trace" disabled="false" abstract="false" sourceClass="common.trace" namedFactNums="true" countMeasureName="%COUNT" bucketSize="8" bitmapChunkInMemory="false" precompute="0" disableListingGroups="false" enableSqlRestrict="false">
+  <dimension name="msg" disabled="false" hasAll="false" allCaption="All msg" allDisplayName="msg" type="data" hidden="false" showHierarchies="default">
+    <hierarchy name="H1" disabled="false" hidden="false">
+      <level name="msg" disabled="false" sourceProperty="msg" list="false" useDisplayValue="true" useAsFilter="true" hidden="false" factNumber="2">
+      </level>
+    </hierarchy>
+  </dimension>
+  <dimension name="name" disabled="false" hasAll="false" allCaption="All name" allDisplayName="name" type="data" hidden="false" showHierarchies="default">
+    <hierarchy name="H1" disabled="false" hidden="false">
+      <level name="name" disabled="false" sourceProperty="name" list="false" useDisplayValue="true" useAsFilter="true" hidden="false" factNumber="3">
+      </level>
+    </hierarchy>
+  </dimension>
+  <dimension name="ts" disabled="false" hasAll="false" allCaption="All ts" allDisplayName="ts" sourceProperty="ts" type="time" calendar="gregorian" hidden="false" showHierarchies="default">
+    <hierarchy name="H1" disabled="false" hidden="false">
+      <level name="day" disabled="false" timeFunction="DayMonthYear" list="false" useDisplayValue="true" useAsFilter="true" hidden="false" factNumber="4">
+      </level>
+      <level name="hour" disabled="false" timeFunction="HourNumber" list="false" useDisplayValue="true" useAsFilter="true" hidden="false" factNumber="5">
+      </level>
+      <level name="minute" disabled="false" timeFunction="MinuteNumber" list="false" useDisplayValue="true" useAsFilter="true" hidden="false" factNumber="6">
+      </level>
+    </hierarchy>
+  </dimension>
+  <dimension name="type" disabled="false" hasAll="false" allCaption="All type" allDisplayName="type" type="data" hidden="false" showHierarchies="default">
+    <hierarchy name="H1" disabled="false" hidden="false">
+      <level name="type" disabled="false" sourceProperty="type" list="false" useDisplayValue="true" useAsFilter="true" hidden="false" factNumber="7">
+      </level>
+    </hierarchy>
+  </dimension>
+  <measure name="imported" disabled="false" sourceExpression="##class(common.trace).getImported(%source.%ID)" aggregate="SUM" type="number" scale="0" hidden="false" searchable="false" factNumber="1">
+  </measure>
+  <measure name="errors" disabled="false" sourceExpression="##class(common.trace).getErrors(%source.%ID)" aggregate="SUM" type="number" scale="0" hidden="false" searchable="false" factNumber="2">
+  </measure>
+  <measure name="elapsedMAX" disabled="false" sourceExpression="##class(common.trace).getElapse(%source.%ID)" aggregate="MAX" type="number" scale="6" hidden="false" searchable="false" factNumber="3">
+  </measure>
+  <measure name="elapse" disabled="false" sourceExpression="##class(common.trace).getElapse(%source.%ID)" aggregate="SUM" type="number" scale="6" hidden="false" searchable="false" factNumber="3">
+  </measure>
+  <measure name="elapseMIN" disabled="false" sourceExpression="##class(common.trace).getElapseMIN(%source.%ID)" aggregate="MIN" type="number" scale="6" hidden="false" searchable="false" factNumber="4">
+  </measure>
+  <measure name="elapseAVG" disabled="false" sourceExpression="##class(common.trace).getElapse(%source.%ID)" aggregate="AVG" type="number" scale="6" hidden="false" searchable="false" factNumber="3">
+  </measure>
+  <measure name="size" disabled="false" sourceExpression="##class(common.trace).getSize(%source.%ID)" aggregate="SUM" type="number" scale="0" hidden="false" searchable="false" factNumber="5">
+  </measure>
+  <measure name="sizeMAX" disabled="false" sourceExpression="##class(common.trace).getSize(%source.%ID)" aggregate="MAX" type="number" scale="0" hidden="false" searchable="false" factNumber="5">
+  </measure>
+  <measure name="sizeMIN" disabled="false" sourceExpression="##class(common.trace).getSizeMIN(%source.%ID)" aggregate="MIN" type="number" scale="0" hidden="false" searchable="false" factNumber="6">
+  </measure>
+  <measure name="sizeAVG" disabled="false" sourceExpression="##class(common.trace).getSize(%source.%ID)" aggregate="AVG" type="number" scale="0" hidden="false" searchable="false" factNumber="5">
+  </measure>
+  <listing name="listing" disabled="false" listingType="table" fieldList="%ID,name,type,ts,msg">
+  </listing>
+</cube>
+]]></Data>
+</XData>
+
+<Parameter name="DOMAIN">
+</Parameter>
+</Class>
+
+
+<Class name="data.test">
+<ClassType>persistent</ClassType>
+<Super>%Persistent,%XML.Adaptor,%JSON.Adaptor,%Populate</Super>
+<TimeChanged>66346,67145.3868166</TimeChanged>
+<TimeCreated>66322,67898.1568348</TimeCreated>
+
+<Parameter name="IDPROPERTY">
+<Default>String</Default>
+</Parameter>
+
+<Property name="String">
+<Type>%String</Type>
+<Parameter name="MAXLEN"/>
+</Property>
+
+<Property name="BStream">
+<Type>%Stream.GlobalBinary</Type>
+<Parameter name="POPSPEC" value="##class(data.test).BStreamPop()"/>
+</Property>
+
+<Property name="CStream">
+<Type>%Stream.GlobalCharacter</Type>
+<Parameter name="POPSPEC" value="##class(data.test).CStreamPop()"/>
+</Property>
+
+<Property name="Numeric">
+<Type>%Numeric</Type>
+</Property>
+
+<Property name="Integer">
+<Type>%Integer</Type>
+</Property>
+
+<Property name="Float">
+<Type>%Float</Type>
+</Property>
+
+<Property name="Double">
+<Type>%Double</Type>
+</Property>
+
+<Property name="Date">
+<Type>%Date</Type>
+</Property>
+
+<Property name="Timestamp">
+<Type>%TimeStamp</Type>
+</Property>
+
+<Property name="Boolean">
+<Type>%Boolean</Type>
+</Property>
+
+<Property name="extension">
+<Type>%String</Type>
+<InitialExpression>".pdf"</InitialExpression>
+</Property>
+
+<Index name="StringIndex">
+<Properties>String</Properties>
+</Index>
+
+<Index name="BStreamIndex">
+<Properties>BStream</Properties>
+</Index>
+
+<Index name="CStreamIndex">
+<Properties>CStream</Properties>
+</Index>
+
+<Index name="NumericIndex">
+<Properties>Numeric</Properties>
+</Index>
+
+<Index name="IntegerIndex">
+<Properties>Integer</Properties>
+</Index>
+
+<Index name="FloatIndex">
+<Properties>Float</Properties>
+</Index>
+
+<Index name="DoubleIndex">
+<Properties>Double</Properties>
+</Index>
+
+<Index name="DateIndex">
+<Properties>Date</Properties>
+</Index>
+
+<Index name="TimestampIndex">
+<Properties>Timestamp</Properties>
+</Index>
+
+<Index name="BooleanIndex">
+<Properties>Boolean</Properties>
+</Index>
+
+<Method name="add">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>filename:%String=""</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    set sc=$$$OK
+    Try {
+        // default value if filename parameter is null
+        set:filename="" filename = $system.Util.DataDirectory()_"docs/copyright.pdf"
+        if ##class(%File).Exists(filename) {
+            set a = ..%New()
+            set a.String = $PIECE(filename,"/",*)
+            set a.extension = $PIECE(a.String,".",*)
+            if a.extension '= "log" {
+                set binary=##class(%Stream.FileBinary).%New()
+                set sc=binary.LinkToFile(filename)
+                do a.BStream.CopyFrom(binary)
+            }
+            set character=##class(%Stream.FileCharacter).%New()
+            set sc=character.LinkToFile(filename)
+            do a.CStream.CopyFrom(character)
+            set a.Numeric = a.CStream.Size
+            set a.Integer = a.CStream.Size
+            set a.Float = a.CStream.Size
+            set a.Double = a.CStream.Size
+            set a.Date = +$H
+            set a.Timestamp = $zdt($h,3)
+            set a.Boolean = 1
+            set sc = a.%Save()
+        } else {
+            set sc = $system.Status.Error("5001",filename _ " doesn't exist")
+        }
+    }
+    Catch ex {
+        Set sc=ex.AsStatus()
+    }
+    
+    return sc
+]]></Implementation>
+</Method>
+
+<Method name="BStreamPop">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%Stream.GlobalBinary</ReturnType>
+<Implementation><![CDATA[
+    set file=##class(%Stream.FileBinary).%New()
+    set filename=$system.Util.DataDirectory()_"docs/copyright.pdf"
+	set sc=file.LinkToFile(filename)
+    set stream=##class(%Stream.GlobalBinary).%New()
+    do stream.CopyFrom(file)
+    return stream
+]]></Implementation>
+</Method>
+
+<Method name="CStreamPop">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%Stream.GlobalCharacter</ReturnType>
+<Implementation><![CDATA[
+    set file=##class(%Stream.FileCharacter).%New()
+    set filename=$system.Util.DataDirectory()_"iris.cpf"
+	set sc=file.LinkToFile(filename)
+    set stream=##class(%Stream.GlobalCharacter).%New()
+    do stream.CopyFrom(file)
+    return stream
+]]></Implementation>
+</Method>
+
+<Method name="extractBinary">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>id:%Integer,extension:%String="pdf",directory:%String="tmp"</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    set sc=$$$OK
+    if ..%ExistsId(id) {
+        set data=..%OpenId(id)
+        set directory=##class(%File).NormalizeDirectory($system.Util.DataDirectory()_directory)
+        do:'##class(%File).DirectoryExists(directory) ##class(%File).CreateDirectoryChain(directory)
+        set filename=directory_id_"_BStream."_extension
+        set file=##class(%Stream.FileBinary).%New()
+        set sc= file.LinkToFile(filename)
+        set sc=file.CopyFrom(data.BStream)
+        set sc=file.%Save()
+        write:sc filename," successfully extracted (",data.BStream.Size,")",file.Size,!
+    } else {
+        set sc=$SYSTEM.Status.Error(5001,id_" doesn't exist")
+    }
+    return sc
+]]></Implementation>
+</Method>
+
+<Method name="extractCharacter">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>id:%Integer,extension:%String="txt",directory:%String="tmp"</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    set sc=$$$OK
+    if ..%ExistsId(id) {
+        set data=..%OpenId(id)
+        set directory=##class(%File).NormalizeDirectory($system.Util.DataDirectory()_directory)
+        do:'##class(%File).DirectoryExists(directory) ##class(%File).CreateDirectoryChain(directory)
+        set filename=directory_id_"_CStream."_extension
+        set file=##class(%Stream.FileCharacter).%New()
+        set sc= file.LinkToFile(filename)
+        set sc=file.CopyFrom(data.CStream)
+        set sc=file.%Save()
+        write:sc filename," successfully extracted (",data.CStream.Size,")",file.Size,!
+    } else {
+        set sc=$SYSTEM.Status.Error(5001,id_" doesn't exist")
+    }
+    return sc
+]]></Implementation>
+</Method>
+
+<Storage name="Default">
+<Type>%Storage.Persistent</Type>
+<DataLocation>^data.testD</DataLocation>
+<DefaultData>testDefaultData</DefaultData>
+<IdLocation>^data.testD</IdLocation>
+<IndexLocation>^data.testI</IndexLocation>
+<StreamLocation>^data.testS</StreamLocation>
+<ExtentSize>2</ExtentSize>
+<Data name="testDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>String</Value>
+</Value>
+<Value name="3">
+<Value>BStream</Value>
+</Value>
+<Value name="4">
+<Value>CStream</Value>
+</Value>
+<Value name="5">
+<Value>Numeric</Value>
+</Value>
+<Value name="6">
+<Value>Integer</Value>
+</Value>
+<Value name="7">
+<Value>Float</Value>
+</Value>
+<Value name="8">
+<Value>Double</Value>
+</Value>
+<Value name="9">
+<Value>Date</Value>
+</Value>
+<Value name="10">
+<Value>Timestamp</Value>
+</Value>
+<Value name="11">
+<Value>Boolean</Value>
+</Value>
+<Value name="12">
+<Value>extension</Value>
+</Value>
+</Data>
+<Property name="%%CLASSNAME">
+<Selectivity>100.0000%</Selectivity>
+<AverageFieldSize>2</AverageFieldSize>
+</Property>
+<Property name="%%ID">
+<Selectivity>1</Selectivity>
+<AverageFieldSize>3</AverageFieldSize>
+</Property>
+<Property name="BStream">
+<Selectivity>50.0000%</Selectivity>
+</Property>
+<Property name="Boolean">
+<Selectivity>100.0000%</Selectivity>
+<AverageFieldSize>2</AverageFieldSize>
+</Property>
+<Property name="CStream">
+<Selectivity>50.0000%</Selectivity>
+</Property>
+<Property name="Date">
+<Selectivity>50.0000%</Selectivity>
+<AverageFieldSize>4</AverageFieldSize>
+</Property>
+<Property name="Double">
+<Selectivity>50.0000%</Selectivity>
+<AverageFieldSize>10</AverageFieldSize>
+</Property>
+<Property name="Float">
+<Selectivity>50.0000%</Selectivity>
+<AverageFieldSize>4</AverageFieldSize>
+</Property>
+<Property name="Integer">
+<Selectivity>50.0000%</Selectivity>
+<AverageFieldSize>6</AverageFieldSize>
+</Property>
+<Property name="Numeric">
+<Selectivity>50.0000%</Selectivity>
+<AverageFieldSize>5.5</AverageFieldSize>
+</Property>
+<Property name="String">
+<Selectivity>50.0000%</Selectivity>
+<AverageFieldSize>3</AverageFieldSize>
+</Property>
+<Property name="Timestamp">
+<Selectivity>50.0000%</Selectivity>
+<AverageFieldSize>21</AverageFieldSize>
+</Property>
+<Property name="extension">
+<Selectivity>100.0000%</Selectivity>
+<AverageFieldSize>6</AverageFieldSize>
+</Property>
+<SQLMap name="BStreamIndex">
+<BlockCount>-4</BlockCount>
+</SQLMap>
+<SQLMap name="BooleanIndex">
+<BlockCount>-4</BlockCount>
+</SQLMap>
+<SQLMap name="CStreamIndex">
+<BlockCount>-4</BlockCount>
+</SQLMap>
+<SQLMap name="DateIndex">
+<BlockCount>-4</BlockCount>
+</SQLMap>
+<SQLMap name="DoubleIndex">
+<BlockCount>-4</BlockCount>
+</SQLMap>
+<SQLMap name="FloatIndex">
+<BlockCount>-4</BlockCount>
+</SQLMap>
+<SQLMap name="IDKEY">
+<BlockCount>-4</BlockCount>
+</SQLMap>
+<SQLMap name="IntegerIndex">
+<BlockCount>-4</BlockCount>
+</SQLMap>
+<SQLMap name="NumericIndex">
+<BlockCount>-4</BlockCount>
+</SQLMap>
+<SQLMap name="StringIndex">
+<BlockCount>-4</BlockCount>
+</SQLMap>
+<SQLMap name="TimestampIndex">
+<BlockCount>-4</BlockCount>
+</SQLMap>
+</Storage>
+</Class>
+</Export>

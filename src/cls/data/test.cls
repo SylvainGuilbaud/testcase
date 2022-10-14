@@ -1,11 +1,21 @@
 Class data.test Extends (%Persistent, %XML.Adaptor, %JSON.Adaptor, %Populate) [ ClassType = persistent ]
 {
 
+Parameter IDPROPERTY = "String";
+
+// Property String As %String(MAXLEN = "", POPSPEC = "Mission()", XMLNAME = "DocumentName", XMLPROJECTION = "ATTRIBUTE");
+
 Property String As %String(MAXLEN = "", POPSPEC = "Mission()");
+
+// Property BStream As %Stream.GlobalBinary(POPSPEC = "##class(data.test).BStreamPop()", XMLPROJECTION = "none");
 
 Property BStream As %Stream.GlobalBinary(POPSPEC = "##class(data.test).BStreamPop()");
 
+// Property CStream As %Stream.GlobalCharacter(POPSPEC = "##class(data.test).CStreamPop()", XMLPROJECTION = "none");
+
 Property CStream As %Stream.GlobalCharacter(POPSPEC = "##class(data.test).CStreamPop()");
+
+// Property Numeric As %Numeric(XMLNAME = "thisisanumber", XMLPROJECTION = "ATTRIBUTE");
 
 Property Numeric As %Numeric;
 
@@ -53,12 +63,12 @@ ClassMethod add(filename As %String = "") As %Status
         set:filename="" filename = $system.Util.DataDirectory()_"docs/copyright.pdf"
         if ##class(%File).Exists(filename) {
             set a = ..%New()
-            set a.String = $PIECE(filename,"/",*)
+            set a.String = $random(10000) _ $PIECE(filename,"/",*)
             set a.extension = $PIECE(a.String,".",*)
             set file=##class(%Stream.FileBinary).%New()
             set sc=file.LinkToFile(filename)
             do a.BStream.CopyFrom(file)
-            do a.CStream.CopyFrom(file)
+            do a.CStream.Write("<hello>\0é&&&éooiiàçç?%^$$*```£€$$$@#</hello>")
             set a.Numeric = a.BStream.Size
             set a.Integer = a.BStream.Size
             set a.Float = a.BStream.Size
@@ -136,6 +146,24 @@ ClassMethod extractCharacter(id As %Integer, extension As %String = "txt", direc
     return sc
 }
 
+XData JSONExportFormat
+{
+<Mapping xmlns="http://www.intersystems.com/jsonmapping">
+    <Property Name="String" FieldName="DocumentName"/>
+    <Property Name="BStream" Include="INPUTONLY"/>
+    <Property Name="CStream" Include="INPUTONLY"/>
+    <Property Name="Boolean" FieldName="Boolean"/>
+    <Property Name="Date" FieldName="Date"/>
+    <Property Name="Double" FieldName="Double"/>
+    <Property Name="Float" FieldName="Float"/>
+    <Property Name="Integer" FieldName="Integer"/>
+    <Property Name="Numeric" FieldName="Numeric"/>
+    <Property Name="Timestamp" FieldName="Timestamp"/>
+    <Property Name="created" FieldName="created"/>
+    <Property Name="extension" FieldName="extension"/>
+</Mapping>
+}
+
 Storage Default
 {
 <Data name="testDefaultData">
@@ -181,92 +209,8 @@ Storage Default
 </Data>
 <DataLocation>^data.testD</DataLocation>
 <DefaultData>testDefaultData</DefaultData>
-<ExtentSize>2</ExtentSize>
 <IdLocation>^data.testD</IdLocation>
 <IndexLocation>^data.testI</IndexLocation>
-<Property name="%%CLASSNAME">
-<AverageFieldSize>2</AverageFieldSize>
-<Selectivity>100.0000%</Selectivity>
-</Property>
-<Property name="%%ID">
-<AverageFieldSize>3</AverageFieldSize>
-<Selectivity>1</Selectivity>
-</Property>
-<Property name="BStream">
-<Selectivity>50.0000%</Selectivity>
-</Property>
-<Property name="Boolean">
-<AverageFieldSize>2</AverageFieldSize>
-<Selectivity>100.0000%</Selectivity>
-</Property>
-<Property name="CStream">
-<Selectivity>50.0000%</Selectivity>
-</Property>
-<Property name="Date">
-<AverageFieldSize>4</AverageFieldSize>
-<Selectivity>50.0000%</Selectivity>
-</Property>
-<Property name="Double">
-<AverageFieldSize>10</AverageFieldSize>
-<Selectivity>50.0000%</Selectivity>
-</Property>
-<Property name="Float">
-<AverageFieldSize>4</AverageFieldSize>
-<Selectivity>50.0000%</Selectivity>
-</Property>
-<Property name="Integer">
-<AverageFieldSize>6</AverageFieldSize>
-<Selectivity>50.0000%</Selectivity>
-</Property>
-<Property name="Numeric">
-<AverageFieldSize>5.5</AverageFieldSize>
-<Selectivity>50.0000%</Selectivity>
-</Property>
-<Property name="String">
-<AverageFieldSize>3</AverageFieldSize>
-<Selectivity>50.0000%</Selectivity>
-</Property>
-<Property name="Timestamp">
-<AverageFieldSize>21</AverageFieldSize>
-<Selectivity>50.0000%</Selectivity>
-</Property>
-<Property name="extension">
-<AverageFieldSize>6</AverageFieldSize>
-<Selectivity>100.0000%</Selectivity>
-</Property>
-<SQLMap name="BStreamIndex">
-<BlockCount>-4</BlockCount>
-</SQLMap>
-<SQLMap name="BooleanIndex">
-<BlockCount>-4</BlockCount>
-</SQLMap>
-<SQLMap name="CStreamIndex">
-<BlockCount>-4</BlockCount>
-</SQLMap>
-<SQLMap name="DateIndex">
-<BlockCount>-4</BlockCount>
-</SQLMap>
-<SQLMap name="DoubleIndex">
-<BlockCount>-4</BlockCount>
-</SQLMap>
-<SQLMap name="FloatIndex">
-<BlockCount>-4</BlockCount>
-</SQLMap>
-<SQLMap name="IDKEY">
-<BlockCount>-4</BlockCount>
-</SQLMap>
-<SQLMap name="IntegerIndex">
-<BlockCount>-4</BlockCount>
-</SQLMap>
-<SQLMap name="NumericIndex">
-<BlockCount>-4</BlockCount>
-</SQLMap>
-<SQLMap name="StringIndex">
-<BlockCount>-4</BlockCount>
-</SQLMap>
-<SQLMap name="TimestampIndex">
-<BlockCount>-4</BlockCount>
-</SQLMap>
 <StreamLocation>^data.testS</StreamLocation>
 <Type>%Storage.Persistent</Type>
 }

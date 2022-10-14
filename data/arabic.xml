@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tablename-Exparf.ADRESSESCLIENT>
+<Exparf.ADRESSESCLIENT>
+<ADCLID>55562</ADCLID>
+<CLISId>9549</CLISId>
+<ADRESSE><![CDATA[]]></ADRESSE>
+<ADCLCodePostal><![CDATA[16094 ]]></ADCLCodePostal>
+<ADCLVille><![CDATA[ALGER ]]></ADCLVille>
+<ADCLPays><![CDATA[]]></ADCLPays>
+<ADCLTelephone><![CDATA[]]></ADCLTelephone>
+<ADCLZACZI><![CDATA[]]></ADCLZACZI>
+<ADCLLOT><![CDATA[]]></ADCLLOT>
+<ADCLGsm><![CDATA[]]></ADCLGsm>
+<ADCLEmail><![CDATA[]]></ADCLEmail>
+<ADCLContact><![CDATA[]]></ADCLContact>
+<ADCLAdresse><![CDATA[]]></ADCLAdresse>
+<ADCLFacturation>true</ADCLFacturation>
+<ADCLLivraison>true</ADCLLivraison>
+<ADCLNOrdreaff>0</ADCLNOrdreaff>
+<PAYSId>5</PAYSId>
+<IDVILLES>0</IDVILLES>
+<sAdr1><![CDATA[Lotissement Les Rosiers, Villa 62]]></sAdr1>
+<sAdr2><![CDATA[OULED FAYET]]></sAdr2>
+<sAdr3><![CDATA[NIF : 001816101342164 ]]></sAdr3>
+<sNomSociete><![CDATA[SARL ESSENCES ET FRAGRANCES]]></sNomSociete>
+<sTVAIntraCom><![CDATA[]]></sTVAIntraCom>
+<bDefaut>false</bDefaut>
+<sConditions><![CDATA[]]></sConditions>
+<sRemarques><![CDATA[]]></sRemarques>
+<ProvinceEtat><![CDATA[]]></ProvinceEtat>
+<nStatutTVA>1</nStatutTVA>
+<dDateDerniereVerifTVA></dDateDerniereVerifTVA>
+<sAdresseLangue><![CDATA[الــمـسـتـورد : ش.ذ.م.م اسونس فراقرانس
+الـعـنـوان:  حي الورود رقم 62 أولاد فايت 16094 الجزائر
+المصدر : ا كسبريسيون بارفيمي 
+المنشــأ:  فرنسا]]></sAdresseLangue>
+<sCodeAdresse><![CDATA[]]></sCodeAdresse>
+<sCompteComptable><![CDATA[]]></sCompteComptable>
+<bDefautFacture>true</bDefautFacture>
+<bDefautLivraison>true</bDefautLivraison>
+<bSiegeSocial>true</bSiegeSocial>
+<bInactive>false</bInactive>
+</Exparf.ADRESSESCLIENT>
+</tablename-Exparf.ADRESSESCLIENT>
