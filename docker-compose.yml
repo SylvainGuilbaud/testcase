@@ -1,10 +1,10 @@
 version: '3.6'
 networks:
-  irisnetwork:
+  irisnetworktescase:
     ipam:
       driver: default
       config:
-        - subnet: 172.30.0.0/24
+        - subnet: 170.30.0.0/24
 services:
   iris:
     build: 
@@ -24,24 +24,24 @@ services:
       - ./data:/data
       # - ./irisdata:/irisdata
     networks:
-      irisnetwork:
-        ipv4_address: 172.30.0.10
+      irisnetworktescase:
+        ipv4_address: 170.30.0.10
   webgateway:
     hostname: webgateway
     container_name: webgateway
     depends_on:
       - iris
-    image: containers.intersystems.com/intersystems/webgateway:2022.2.0.334.0
+    image: containers.intersystems.com/intersystems/webgateway-arm64:latest-em
     ports:
-    - 443:443
-    - 80:80
+    - 444:443
+    - 81:80
     environment:
       - ISC_DATA_DIRECTORY=/webgateway
       - IRIS_USER=CSPsystem
       - IRIS_PASSWORD=SYS
     networks:
-      irisnetwork:
-        ipv4_address: 172.30.0.200
+      irisnetworktescase:
+        ipv4_address: 170.30.0.200
     volumes:
       - "./volumes/webgateway:/webgateway"
 

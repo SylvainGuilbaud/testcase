@@ -7,8 +7,10 @@
       "ns": "IRISAPP",
       "username": "_SYSTEM",
       "password": "SYS",
-      "host": "127.0.0.1",
-      "port": 12773,
+      "docker-compose": {
+        "service": "iris",
+        "internalPort": 52773
+      },
       "active": true,
       "links": {
         "version": "http://127.0.0.1/common/",

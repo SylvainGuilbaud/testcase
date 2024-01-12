@@ -1,4 +1,5 @@
-ARG IMAGE=containers.intersystems.com/intersystems/iris-community:2022.2.0.334.0
+ARG IMAGE=containers.intersystems.com/intersystems/iris-community:latest-em-linux-arm64
+ARG IMAGE=containers.intersystems.com/intersystems/iris-community:latest-cd-linux-arm64
 FROM $IMAGE
 USER root
 WORKDIR /app

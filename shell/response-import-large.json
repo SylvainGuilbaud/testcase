@@ -1,0 +1,1 @@
+{"system":"testcase-import:IRIS","ts":"2024-01-12 17:18:17.412467","classname":"data.test","init":"","nbRecords":1,"parseError":[{"error":"ERROR #5002: ObjectScript error: <MAXSTRING>%JSONImportInternal+185^data.test.1","key":0}],"saveError":[],"IdLocation":"^data.testD","imported":1,"elapse":0.023071}
