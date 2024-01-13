@@ -1,13 +1,16 @@
+/// <a target="_blank" 
+/// href="https://docs.intersystems.com/irislatest/csp/docbook/DocBook.UI.Page.cls?KEY=RCOS_appx_limits#RCOS_appx_limits_string_length">
+/// String Length Limit
+/// </a>
 Class MyTest.Class Extends (%RegisteredObject, %JSON.Adaptor, %XML.Adaptor)
 {
 
 Property streamProperty As %Stream.GlobalCharacter;
 
-/// Description
 ClassMethod test() As %Status
 {
     Set sc = $$$OK
-    for size = 3.641, 3.645, 4 {
+    for size = 3.641, 3.645 {
         write !,"Size: ",size," MB",!
         do ##class(MyTest.Class).import(size*1000)
     }
