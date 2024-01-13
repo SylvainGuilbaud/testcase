@@ -3,33 +3,33 @@ Class MyTest.Class Extends (%RegisteredObject, %JSON.Adaptor, %XML.Adaptor)
 
 Property streamProperty As %Stream.GlobalCharacter;
 
-ClassMethod import(maxstring As %Boolean)
+/// Description
+ClassMethod test() As %Status
 {
-    Set limit = $select($get(maxstring, 1):4000, 1:10)
-
-    Set stream = ##class(%Stream.FileCharacter).%New()
-    
-    Do stream.Write("{""streamProperty"":""")
-    For i = 1:1:limit {
-        Do stream.Write($j("x",1000))
+    Set sc = $$$OK
+    for size = 3641, 4000, 10000 {
+        write !,"Size:",size,!
+        do ##class(MyTest.Class).import(size)
     }
-    Do stream.Write("""}")
-    Do stream.Rewind()
+    Return sc
+}
 
-    Write "JSON stream length: ",stream.Size,!
-    
-    Set obj = ..%New()
-    Do obj.%JSONImport(stream)
-    Write "JSON Property after import: ",obj.streamProperty.Size,!
-
-    kill (limit)
+ClassMethod import(maxsize As %Integer = 3641)
+{
+    #; Set limit = $select($get(maxstring, 1):maxsize, 1:10)
 
     Set stream = ##class(%Stream.FileCharacter).%New()
 
     Do stream.Write("<MyTest.Class><streamProperty>")
-    For i = 1:1:limit {
-        Do stream.Write($j("x",1000))
+    set ^||data=""
+    For i = 1:1:maxsize {
+        set ^||data=^||data _ $j("x",1000)
+        if $LENGTH(^||data)>3500000 {
+            Do stream.Write(^||data)
+            set ^||data=""
+        }
     }
+    Do stream.Write(^||data)
     Do stream.Write("</streamProperty></MyTest.Class>")
     Do stream.Rewind()
 
@@ -43,6 +43,29 @@ ClassMethod import(maxstring As %Boolean)
             Write "XML Property after import: ",obj.streamProperty.Size,!
         }
     }
+
+    kill (maxsize)
+
+    Set stream = ##class(%Stream.FileCharacter).%New()
+    
+    Do stream.Write("{""streamProperty"":""")
+    set ^||data=""
+      For i = 1:1:maxsize {
+        set ^||data=^||data _ $j("x",1000)
+        if $LENGTH(^||data)>3500000 {
+            Do stream.Write(^||data)
+            set ^||data=""
+        }
+    }
+    Do stream.Write(^||data)
+    Do stream.Write("""}")
+    Do stream.Rewind()
+
+    Write "JSON stream length: ",stream.Size,!
+    
+    Set obj = ..%New()
+    Do obj.%JSONImport(stream)
+    Write "JSON Property after import: ",obj.streamProperty.Size,!
 }
 
 }
