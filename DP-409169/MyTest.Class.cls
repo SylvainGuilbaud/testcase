@@ -7,17 +7,15 @@ Property streamProperty As %Stream.GlobalCharacter;
 ClassMethod test() As %Status
 {
     Set sc = $$$OK
-    for size = 3641, 4000, 10000 {
-        write !,"Size:",size,!
-        do ##class(MyTest.Class).import(size)
+    for size = 3.641, 3.645, 4 {
+        write !,"Size: ",size," MB",!
+        do ##class(MyTest.Class).import(size*1000)
     }
     Return sc
 }
 
 ClassMethod import(maxsize As %Integer = 3641)
 {
-    #; Set limit = $select($get(maxstring, 1):maxsize, 1:10)
-
     Set stream = ##class(%Stream.FileCharacter).%New()
 
     Do stream.Write("<MyTest.Class><streamProperty>")
